@@ -4,7 +4,7 @@ interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
   showTagline?: boolean;
   taglineText?: string;
-  theme?: 'dark' | 'light';
+  theme?: 'dark' | 'light' | 'auto';
   className?: string;
 }
 
@@ -12,7 +12,7 @@ export const Logo: React.FC<LogoProps> = ({
   size = 'md',
   showTagline = false,
   taglineText = 'Learn. Understand. Grow.',
-  theme = 'dark',
+  theme = 'auto',
   className = '',
 }) => {
   const iconSizes = {
@@ -27,7 +27,9 @@ export const Logo: React.FC<LogoProps> = ({
     lg: 'text-2xl',
   };
 
-  const isLight = theme === 'light';
+  // When theme='auto', CSS variables handle everything.
+  // When theme='light', it's on dark backgrounds (e.g. footer).
+  const isOnDarkBg = theme === 'light';
 
   return (
     <div className={`flex items-center gap-2.5 select-none ${className}`}>
@@ -40,31 +42,34 @@ export const Logo: React.FC<LogoProps> = ({
           className="w-full h-full"
         >
           {/* Outer Rounded Container */}
-          <rect width="40" height="40" rx="10" fill={isLight ? '#ffffff' : '#2563eb'} fillOpacity={isLight ? '0.15' : '1'} />
+          <rect
+            width="40" height="40" rx="10"
+            fill={isOnDarkBg ? 'rgba(255,255,255,0.15)' : 'var(--brand-text)'}
+          />
           
           {/* Open Book pages */}
           <path
             d="M9 28V15C9 13.8954 9.89543 13 11 13H19C19.5523 13 20 13.4477 20 14V29C20 29.5523 19.5523 30 19 30H11C9.89543 30 9 29.1046 9 28Z"
-            fill={isLight ? '#ffffff' : '#ffffff'}
+            fill="#ffffff"
             fillOpacity="0.9"
           />
           <path
             d="M31 28V15C31 13.8954 30.1046 13 29 13H21C20.4477 13 20 13.4477 20 14V29C20 29.5523 20.4477 30 21 30H29C30.1046 30 31 29.1046 31 28Z"
-            fill={isLight ? '#ffffff' : '#ffffff'}
+            fill="#ffffff"
             fillOpacity="0.75"
           />
 
           {/* Bridge Arch Connecting the Pages */}
           <path
             d="M12 21C14.5 16 25.5 16 28 21"
-            stroke={isLight ? '#93c5fd' : '#1e3a8a'}
+            stroke={isOnDarkBg ? '#93c5fd' : '#1a264d'}
             strokeWidth="2.5"
             strokeLinecap="round"
           />
           {/* Bridge Vertical Struts */}
-          <line x1="16" y1="18" x2="16" y2="23" stroke={isLight ? '#93c5fd' : '#1e3a8a'} strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="20" y1="17" x2="20" y2="23" stroke={isLight ? '#93c5fd' : '#1e3a8a'} strokeWidth="1.5" strokeLinecap="round" />
-          <line x1="24" y1="18" x2="24" y2="23" stroke={isLight ? '#93c5fd' : '#1e3a8a'} strokeWidth="1.5" strokeLinecap="round" />
+          <line x1="16" y1="18" x2="16" y2="23" stroke={isOnDarkBg ? '#93c5fd' : '#1a264d'} strokeWidth="1.5" strokeLinecap="round" />
+          <line x1="20" y1="17" x2="20" y2="23" stroke={isOnDarkBg ? '#93c5fd' : '#1a264d'} strokeWidth="1.5" strokeLinecap="round" />
+          <line x1="24" y1="18" x2="24" y2="23" stroke={isOnDarkBg ? '#93c5fd' : '#1a264d'} strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       </div>
 
@@ -72,21 +77,25 @@ export const Logo: React.FC<LogoProps> = ({
       <div className="flex flex-col">
         <div className="flex items-center">
           <span
-            className={`font-heading font-extrabold tracking-tight ${textSizes[size]} ${
-              isLight ? 'text-white' : 'text-slate-900'
-            }`}
+            className={`font-heading font-extrabold tracking-tight ${textSizes[size]}`}
+            style={{ color: isOnDarkBg ? '#ffffff' : 'var(--text-primary)' }}
           >
-            Edu<span className="text-blue-600">Bridge</span>
+            Edu<span style={{ color: 'var(--brand-text)' }}>Bridge</span>
           </span>
-          <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded bg-blue-100 text-blue-700">
+          <span
+            className="ml-1 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded"
+            style={{
+              backgroundColor: 'var(--brand-bg)',
+              color: 'var(--brand-text)',
+            }}
+          >
             AI
           </span>
         </div>
         {showTagline && (
           <span
-            className={`text-[11px] font-medium tracking-tight -mt-0.5 ${
-              isLight ? 'text-slate-300' : 'text-slate-500'
-            }`}
+            className="text-[11px] font-medium tracking-tight -mt-0.5"
+            style={{ color: isOnDarkBg ? 'rgba(255,255,255,0.6)' : 'var(--text-muted)' }}
           >
             {taglineText}
           </span>

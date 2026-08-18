@@ -8,7 +8,7 @@ export const DashboardLayout: React.FC = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('English');
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--bg-primary)' }}>
       {/* Left Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
@@ -20,7 +20,7 @@ export const DashboardLayout: React.FC = () => {
           onLanguageChange={setSelectedLanguage}
         />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto animate-fade-in">
           <Outlet context={{ selectedLanguage, setSelectedLanguage }} />
         </main>
       </div>

@@ -1,49 +1,335 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  --font-heading: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+/* ═══════════════════════════════════════════════════════════════════════════
+   EduBridge AI — Design System (Impeccable Methodology)
+   
+   Principles:
+   - Never pure black/gray — all neutrals are color-tinted
+   - Warm-tinted (light), blue-tinted (dark)
+   - Smooth cubic-bezier easing only (no bounce/elastic)
+   - Respects prefers-reduced-motion
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-  --color-brand-50: #eff6ff;
-  --color-brand-100: #dbeafe;
-  --color-brand-200: #bfdbfe;
-  --color-brand-300: #93c5fd;
-  --color-brand-400: #60a5fa;
-  --color-brand-500: #3b82f6;
-  --color-brand-600: #2563eb;
-  --color-brand-700: #1d4ed8;
-  --color-brand-800: #1e40af;
-  --color-brand-900: #1e3a8a;
-  --color-brand-950: #172554;
+@theme {
+  /* Typography — Outfit (body) + DM Sans (headings) per Impeccable guidance */
+  --font-sans: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Brand palette — slightly warmer than stock Tailwind blue */
+  --color-brand-50:  #eef4ff;
+  --color-brand-100: #dae6ff;
+  --color-brand-200: #bdd4ff;
+  --color-brand-300: #90b8ff;
+  --color-brand-400: #6196fc;
+  --color-brand-500: #4f7df3;
+  --color-brand-600: #3b68e0;
+  --color-brand-700: #2d51c4;
+  --color-brand-800: #2a449e;
+  --color-brand-900: #273d7d;
+  --color-brand-950: #1a264d;
+
+  /* Override Tailwind slate tokens so existing classes auto-theme in dark mode.
+     These resolve to CSS variables set by [data-theme]. */
+  --color-white:     var(--bg-surface);
+  --color-slate-50:  var(--bg-secondary);
+  --color-slate-100: var(--bg-inset);
+  --color-slate-200: var(--border-default);
+  --color-slate-300: var(--border-strong);
+  --color-slate-400: var(--text-muted);
+  --color-slate-500: var(--text-muted);
+  --color-slate-600: var(--text-secondary);
+  --color-slate-700: var(--text-secondary);
+  --color-slate-800: var(--text-primary);
+  --color-slate-900: var(--text-primary);
+  --color-slate-950: var(--text-primary);
+
+  /* Override blue tokens to match brand */
+  --color-blue-50:   var(--brand-bg);
+  --color-blue-100:  var(--brand-bg);
+  --color-blue-200:  var(--brand-border);
+  --color-blue-500:  var(--brand-text);
+  --color-blue-600:  var(--brand-text);
+  --color-blue-700:  var(--brand-text);
+
+  /* Override semantic colors */
+  --color-red-50:    var(--danger-bg);
+  --color-red-200:   var(--danger-border);
+  --color-red-500:   var(--danger-text);
+  --color-red-600:   var(--danger-text);
+  --color-red-700:   var(--danger-text);
+  --color-emerald-50:  var(--success-bg);
+  --color-emerald-200: var(--success-border);
+  --color-emerald-600: var(--success-text);
+  --color-emerald-700: var(--success-text);
+  --color-amber-50:  var(--warning-bg);
+  --color-amber-200: var(--warning-border);
+  --color-amber-500: var(--warning-text);
+  --color-amber-600: var(--warning-text);
+  --color-amber-700: var(--warning-text);
 }
 
+/* ─── Light Theme (default / warm-tinted) ──────────────────────────────── */
+:root,
+[data-theme="light"] {
+  --bg-primary:     #faf9f7;
+  --bg-secondary:   #f3f1ed;
+  --bg-surface:     #ffffff;
+  --bg-elevated:    #ffffff;
+  --bg-inset:       #f0ece6;
+
+  --text-primary:   #1a1614;
+  --text-secondary: #5c534a;
+  --text-muted:     #8a7f74;
+  --text-on-brand:  #ffffff;
+
+  --border-default: #e6e1da;
+  --border-subtle:  #f0ece6;
+  --border-strong:  #cdc5ba;
+
+  --brand-text:     #3b68e0;
+  --brand-bg:       #eef4ff;
+  --brand-border:   #bdd4ff;
+  --brand-glow:     rgba(79, 125, 243, 0.12);
+
+  --success-text:   #1a7a4c;
+  --success-bg:     #ecfdf3;
+  --success-border: #a7e8c5;
+  
+  --warning-text:   #92610e;
+  --warning-bg:     #fffbeb;
+  --warning-border: #fcd778;
+
+  --danger-text:    #b42318;
+  --danger-bg:      #fef3f2;
+  --danger-border:  #fecdca;
+
+  --shadow-sm:      0 1px 2px rgba(26, 22, 20, 0.06);
+  --shadow-md:      0 4px 12px rgba(26, 22, 20, 0.08);
+  --shadow-lg:      0 8px 28px rgba(26, 22, 20, 0.12);
+  --shadow-brand:   0 4px 14px rgba(59, 104, 224, 0.18);
+
+  color-scheme: light;
+}
+
+/* ─── Dark Theme (blue-tinted) ─────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg-primary:     #0c0f14;
+  --bg-secondary:   #141821;
+  --bg-surface:     #1a1f2e;
+  --bg-elevated:    #222838;
+  --bg-inset:       #111520;
+
+  --text-primary:   #e8eaf0;
+  --text-secondary: #9ba3b5;
+  --text-muted:     #6b7389;
+  --text-on-brand:  #ffffff;
+
+  --border-default: #2a3042;
+  --border-subtle:  #1e2333;
+  --border-strong:  #3a4258;
+
+  --brand-text:     #6196fc;
+  --brand-bg:       rgba(79, 125, 243, 0.12);
+  --brand-border:   rgba(79, 125, 243, 0.25);
+  --brand-glow:     rgba(79, 125, 243, 0.2);
+
+  --success-text:   #6ee7a8;
+  --success-bg:     rgba(16, 185, 129, 0.1);
+  --success-border: rgba(16, 185, 129, 0.25);
+
+  --warning-text:   #fcd34d;
+  --warning-bg:     rgba(245, 158, 11, 0.1);
+  --warning-border: rgba(245, 158, 11, 0.25);
+
+  --danger-text:    #fca5a5;
+  --danger-bg:      rgba(239, 68, 68, 0.1);
+  --danger-border:  rgba(239, 68, 68, 0.25);
+
+  --shadow-sm:      0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md:      0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg:      0 8px 28px rgba(0, 0, 0, 0.5);
+  --shadow-brand:   0 4px 14px rgba(79, 125, 243, 0.3);
+
+  color-scheme: dark;
+}
+
+/* ─── Animation tokens ────────────────────────────────────────────────── */
+:root {
+  --ease-smooth:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out:    cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-out:       cubic-bezier(0, 0, 0.2, 1);
+  --duration-fast:  150ms;
+  --duration-normal: 250ms;
+  --duration-slow:  400ms;
+}
+
+/* ─── Base layer ──────────────────────────────────────────────────────── */
 @layer base {
   body {
     font-family: var(--font-sans);
-    color: #1e293b;
-    background-color: #f8fafc;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+    transition: background-color var(--duration-slow) var(--ease-smooth),
+                color var(--duration-slow) var(--ease-smooth);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
   }
+
+  /* Theme-aware selection */
+  ::selection {
+    background-color: var(--brand-text);
+    color: var(--text-on-brand);
+  }
 }
 
-/* Custom utility animations */
+/* ─── Keyframes ───────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: scaleY(0.92) translateY(-4px); }
+  to   { opacity: 1; transform: scaleY(1) translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 @keyframes floatSlow {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
-
-.animate-float-slow {
-  animation: floatSlow 4s ease-in-out infinite;
+  50%      { transform: translateY(-6px); }
 }
 
 @keyframes pulseSubtle {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  50%      { opacity: 0.6; }
+}
+
+@keyframes progressFill {
+  from { width: 0%; }
+}
+
+@keyframes spinSmooth {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ─── Animation utility classes ───────────────────────────────────────── */
+.animate-fade-in {
+  animation: fadeIn var(--duration-normal) var(--ease-smooth) both;
+}
+
+.animate-fade-up {
+  animation: fadeUp var(--duration-slow) var(--ease-smooth) both;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft var(--duration-slow) var(--ease-smooth) both;
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--duration-normal) var(--ease-smooth) both;
+}
+
+.animate-dropdown-in {
+  animation: dropdownIn var(--duration-normal) var(--ease-smooth) both;
+  transform-origin: top center;
+}
+
+.animate-float-slow {
+  animation: floatSlow 4s var(--ease-in-out) infinite;
 }
 
 .animate-pulse-subtle {
-  animation: pulseSubtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: pulseSubtle 3s var(--ease-in-out) infinite;
+}
+
+.animate-progress-fill {
+  animation: progressFill var(--duration-slow) var(--ease-smooth) both;
+}
+
+.animate-spin-smooth {
+  animation: spinSmooth 0.8s linear infinite;
+}
+
+/* Stagger delay utilities */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
+.stagger-6 { animation-delay: 300ms; }
+.stagger-7 { animation-delay: 350ms; }
+
+/* ─── Reduced motion ──────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Theme-aware surface utilities ───────────────────────────────────── */
+.surface-primary   { background-color: var(--bg-primary); }
+.surface-secondary { background-color: var(--bg-secondary); }
+.surface-card      { background-color: var(--bg-surface); }
+.surface-elevated  { background-color: var(--bg-elevated); }
+.surface-inset     { background-color: var(--bg-inset); }
+
+.text-theme-primary   { color: var(--text-primary); }
+.text-theme-secondary { color: var(--text-secondary); }
+.text-theme-muted     { color: var(--text-muted); }
+.text-theme-brand     { color: var(--brand-text); }
+
+.border-theme         { border-color: var(--border-default); }
+.border-theme-subtle  { border-color: var(--border-subtle); }
+.border-theme-strong  { border-color: var(--border-strong); }
+
+.shadow-theme-sm { box-shadow: var(--shadow-sm); }
+.shadow-theme-md { box-shadow: var(--shadow-md); }
+.shadow-theme-lg { box-shadow: var(--shadow-lg); }
+
+/* ─── Theme-aware interactive states ──────────────────────────────────── */
+.hover-lift {
+  transition: transform var(--duration-normal) var(--ease-smooth),
+              box-shadow var(--duration-normal) var(--ease-smooth);
+}
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--brand-text);
+  outline-offset: 2px;
+}
+
+/* ─── Glass effect ────────────────────────────────────────────────────── */
+.glass {
+  background-color: color-mix(in srgb, var(--bg-surface) 80%, transparent);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
 }

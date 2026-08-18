@@ -13,16 +13,24 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 }) => {
   const sizeClasses = {
     sm: 'w-4 h-4 border-2',
-    md: 'w-8 h-8 border-3',
+    md: 'w-8 h-8 border-[3px]',
     lg: 'w-12 h-12 border-4',
   };
 
   return (
     <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
       <div
-        className={`${sizeClasses[size]} border-blue-200 border-t-blue-600 rounded-full animate-spin`}
+        className={`${sizeClasses[size]} rounded-full animate-spin-smooth`}
+        style={{
+          borderColor: 'var(--border-default)',
+          borderTopColor: 'var(--brand-text)',
+        }}
       />
-      {text && <p className="text-sm font-medium text-slate-500">{text}</p>}
+      {text && (
+        <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+          {text}
+        </p>
+      )}
     </div>
   );
 };

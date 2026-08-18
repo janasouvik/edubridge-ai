@@ -66,24 +66,50 @@ export const Register: React.FC = () => {
     }
   };
 
+  const inputStyle = {
+    backgroundColor: 'var(--bg-secondary)',
+    border: '1px solid var(--border-default)',
+    color: 'var(--text-primary)',
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+    <div
+      className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8"
+      style={{ backgroundColor: 'var(--bg-primary)' }}
+    >
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center animate-fade-up">
         <Link to="/" className="inline-flex justify-center mb-6">
           <Logo size="lg" showTagline={true} />
         </Link>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-heading">
+        <h2
+          className="text-2xl sm:text-3xl font-extrabold font-heading"
+          style={{ color: 'var(--text-primary)' }}
+        >
           Create an account
         </h2>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
           Join EduBridge AI for grounded, personalized learning
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
-        <div className="bg-white py-8 px-6 sm:px-10 rounded-2xl shadow-sm border border-slate-200">
+        <div
+          className="py-8 px-6 sm:px-10 rounded-2xl animate-scale-in"
+          style={{
+            backgroundColor: 'var(--bg-surface)',
+            border: '1px solid var(--border-default)',
+            boxShadow: 'var(--shadow-md)',
+          }}
+        >
           {error && (
-            <div className="mb-5 p-3.5 bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm rounded-xl flex items-center gap-2">
+            <div
+              className="mb-5 p-3.5 text-xs sm:text-sm rounded-xl flex items-center gap-2 animate-fade-up"
+              style={{
+                backgroundColor: 'var(--danger-bg)',
+                border: '1px solid var(--danger-border)',
+                color: 'var(--danger-text)',
+              }}
+            >
               <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -94,29 +120,34 @@ export const Register: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Role Selection Tabs */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
                 I am a:
               </label>
-              <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
+              <div
+                className="grid grid-cols-2 gap-2 p-1 rounded-xl"
+                style={{ backgroundColor: 'var(--bg-secondary)' }}
+              >
                 <button
                   type="button"
                   onClick={() => setRole('student')}
-                  className={`py-2 text-xs font-bold rounded-lg transition-all ${
-                    role === 'student'
-                      ? 'bg-white text-blue-600 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
+                  className="py-2 text-xs font-bold rounded-lg transition-all"
+                  style={{
+                    backgroundColor: role === 'student' ? 'var(--bg-surface)' : 'transparent',
+                    color: role === 'student' ? 'var(--brand-text)' : 'var(--text-secondary)',
+                    boxShadow: role === 'student' ? 'var(--shadow-sm)' : 'none',
+                  }}
                 >
                   🎓 Student
                 </button>
                 <button
                   type="button"
                   onClick={() => setRole('teacher')}
-                  className={`py-2 text-xs font-bold rounded-lg transition-all ${
-                    role === 'teacher'
-                      ? 'bg-white text-blue-600 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
+                  className="py-2 text-xs font-bold rounded-lg transition-all"
+                  style={{
+                    backgroundColor: role === 'teacher' ? 'var(--bg-surface)' : 'transparent',
+                    color: role === 'teacher' ? 'var(--brand-text)' : 'var(--text-secondary)',
+                    boxShadow: role === 'teacher' ? 'var(--shadow-sm)' : 'none',
+                  }}
                 >
                   👩‍🏫 Teacher / Educator
                 </button>
@@ -125,7 +156,7 @@ export const Register: React.FC = () => {
 
             {/* Name */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="name">
+              <label className="block text-xs font-semibold mb-1.5" htmlFor="name" style={{ color: 'var(--text-secondary)' }}>
                 Full Name
               </label>
               <input
@@ -135,13 +166,14 @@ export const Register: React.FC = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Souvik Jana"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 transition-all"
+                style={inputStyle}
               />
             </div>
 
             {/* Email */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="email">
+              <label className="block text-xs font-semibold mb-1.5" htmlFor="email" style={{ color: 'var(--text-secondary)' }}>
                 Email Address
               </label>
               <input
@@ -151,13 +183,14 @@ export const Register: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="e.g. souvik@test.com"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 transition-all"
+                style={inputStyle}
               />
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="password">
+              <label className="block text-xs font-semibold mb-1.5" htmlFor="password" style={{ color: 'var(--text-secondary)' }}>
                 Password
               </label>
               <input
@@ -167,23 +200,25 @@ export const Register: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 transition-all"
+                style={inputStyle}
               />
             </div>
 
             {/* Student-specific Profile Customization */}
             {role === 'student' && (
-              <div className="space-y-4 pt-2 border-t border-slate-100">
+              <div className="space-y-4 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="grade">
+                    <label className="block text-xs font-semibold mb-1.5" htmlFor="grade" style={{ color: 'var(--text-secondary)' }}>
                       Class / Grade
                     </label>
                     <select
                       id="grade"
                       value={grade}
                       onChange={(e) => setGrade(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      className="w-full px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2"
+                      style={inputStyle}
                     >
                       <option value="6">Class 6</option>
                       <option value="7">Class 7</option>
@@ -197,14 +232,15 @@ export const Register: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="language">
+                    <label className="block text-xs font-semibold mb-1.5" htmlFor="language" style={{ color: 'var(--text-secondary)' }}>
                       Preferred Language
                     </label>
                     <select
                       id="language"
                       value={preferredLanguage}
                       onChange={(e) => setPreferredLanguage(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      className="w-full px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2"
+                      style={inputStyle}
                     >
                       <option value="English">English</option>
                       <option value="Bengali">Bengali (বাংলা)</option>
@@ -217,14 +253,15 @@ export const Register: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5" htmlFor="level">
+                  <label className="block text-xs font-semibold mb-1.5" htmlFor="level" style={{ color: 'var(--text-secondary)' }}>
                     Learning Level
                   </label>
                   <select
                     id="level"
                     value={learningLevel}
                     onChange={(e) => setLearningLevel(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2"
+                    style={inputStyle}
                   >
                     <option value="beginner">Beginner (Foundational concepts)</option>
                     <option value="intermediate">Intermediate (Standard curriculum)</option>
@@ -237,15 +274,20 @@ export const Register: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl shadow-xs shadow-blue-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-4"
+              className="w-full py-3 px-4 font-semibold text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-4 hover-lift focus-ring"
+              style={{
+                backgroundColor: 'var(--brand-text)',
+                color: 'var(--text-on-brand)',
+                boxShadow: 'var(--shadow-brand)',
+              }}
             >
               {loading ? <LoadingSpinner size="sm" /> : <span>Create Account</span>}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-xs text-slate-500">
+          <div className="mt-6 text-center text-xs" style={{ color: 'var(--text-muted)' }}>
             Already have an account?{' '}
-            <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-700">
+            <Link to="/login" className="font-semibold" style={{ color: 'var(--brand-text)' }}>
               Sign in
             </Link>
           </div>

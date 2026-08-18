@@ -98,23 +98,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       {/* Mobile backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 lg:hidden"
+          className="fixed inset-0 z-40 lg:hidden"
+          style={{ backgroundColor: 'rgba(12, 15, 20, 0.5)', backdropFilter: 'blur(4px)' }}
           onClick={onClose}
         />
       )}
 
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 border-r flex flex-col lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
+        style={{
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border-default)',
+          transition: 'transform var(--duration-slow) var(--ease-smooth), background-color var(--duration-slow) var(--ease-smooth)',
+        }}
       >
         {/* Header / Brand */}
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div
+          className="p-6 flex items-center justify-between"
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}
+        >
           <Logo size="md" showTagline={true} />
           <button
             type="button"
             onClick={onClose}
-            className="lg:hidden text-slate-400 hover:text-slate-600 p-1"
+            className="lg:hidden p-1 rounded-lg transition-colors"
+            style={{ color: 'var(--text-muted)' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -130,7 +140,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 navigate('/dashboard/doubt-solver');
                 onClose();
               }}
-              className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl shadow-xs shadow-blue-500/20 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              className="w-full py-2.5 px-4 font-medium text-sm rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all hover-lift focus-ring"
+              style={{
+                backgroundColor: 'var(--brand-text)',
+                color: 'var(--text-on-brand)',
+                boxShadow: 'var(--shadow-brand)',
+              }}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
@@ -142,19 +157,37 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* Navigation items */}
         <nav className="flex-1 px-4 py-3 space-y-1 overflow-y-auto">
-          {visibleNavItems.map((item) => (
+          {visibleNavItems.map((item, index) => (
             <NavLink
               key={item.path}
               to={item.path}
               end={item.end}
               onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl font-medium text-sm transition-all ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-600 shadow-2xs font-semibold'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                `flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl font-medium text-sm animate-slide-in-left stagger-${index + 1} ${
+                  isActive ? 'font-semibold' : ''
                 }`
               }
+              style={({ isActive }) => ({
+                backgroundColor: isActive ? 'var(--brand-bg)' : 'transparent',
+                color: isActive ? 'var(--brand-text)' : 'var(--text-secondary)',
+                boxShadow: isActive ? 'var(--shadow-sm)' : 'none',
+                transition: 'background-color var(--duration-fast) var(--ease-smooth), color var(--duration-fast) var(--ease-smooth), box-shadow var(--duration-fast) var(--ease-smooth)',
+              })}
+              onMouseEnter={(e) => {
+                const target = e.currentTarget;
+                if (!target.classList.contains('font-semibold')) {
+                  target.style.backgroundColor = 'var(--bg-secondary)';
+                  target.style.color = 'var(--text-primary)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                const target = e.currentTarget;
+                if (!target.classList.contains('font-semibold')) {
+                  target.style.backgroundColor = 'transparent';
+                  target.style.color = 'var(--text-secondary)';
+                }
+              }}
             >
               {item.icon}
               <span>{item.name}</span>
@@ -164,29 +197,50 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* Learning Streak Widget (Students) */}
         {!isTeacher && (
-          <div className="mx-4 mb-4 p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50/50 border border-blue-100/80">
+          <div
+            className="mx-4 mb-4 p-4 rounded-xl"
+            style={{
+              background: 'linear-gradient(135deg, var(--brand-bg), var(--bg-secondary))',
+              border: '1px solid var(--brand-border)',
+            }}
+          >
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+              <span className="text-xs font-semibold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
                 Learning Streak <span className="text-amber-500">🔥</span>
               </span>
             </div>
-            <div className="text-xl font-extrabold text-blue-600 font-heading">
+            <div className="text-xl font-extrabold font-heading" style={{ color: 'var(--brand-text)' }}>
               7 days
             </div>
-            <div className="text-[11px] text-slate-500 mb-2">Keep it up!</div>
-            <div className="w-full bg-blue-100 rounded-full h-1.5 overflow-hidden">
-              <div className="bg-blue-600 h-full rounded-full w-4/5"></div>
+            <div className="text-[11px] mb-2" style={{ color: 'var(--text-muted)' }}>Keep it up!</div>
+            <div
+              className="w-full rounded-full h-1.5 overflow-hidden"
+              style={{ backgroundColor: 'var(--border-default)' }}
+            >
+              <div
+                className="h-full rounded-full w-4/5 animate-progress-fill"
+                style={{ backgroundColor: 'var(--brand-text)' }}
+              />
             </div>
           </div>
         )}
 
         {/* Bottom Help & Support */}
-        <div className="p-4 border-t border-slate-100">
+        <div className="p-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
           <button
             onClick={() => alert('Need help? Contact support at support@edubridge.ai')}
-            className="flex items-center gap-2.5 text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors w-full px-2 py-1.5 rounded-lg hover:bg-slate-50"
+            className="flex items-center gap-2.5 text-xs font-medium w-full px-2 py-1.5 rounded-lg transition-colors"
+            style={{ color: 'var(--text-muted)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = 'var(--text-muted)';
+            }}
           >
-            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-muted)' }}>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>Help & Support</span>
