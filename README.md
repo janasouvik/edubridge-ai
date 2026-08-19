@@ -113,17 +113,74 @@ EduBridge AI/
 
 ### Prerequisites
 Before setting up the project, make sure you have the following installed:
-- **Node.js** (v18+)
-- **Python** (v3.11+)
-- **PostgreSQL** with **pgvector** installed:
-  ```sql
-  -- Enable vector search inside your PostgreSQL instance
-  CREATE EXTENSION IF NOT EXISTS vector;
-  ```
+- **Node.js** (v18+) & **npm**
+- **Python** (v3.11+) & **pip**
+- **PostgreSQL** (v15+ or v16+) with **pgvector** extension (or Docker)
+- **Git**
 
 ---
 
-### 1. Backend Setup
+### 1. 🗄️ Database Setup (PostgreSQL + pgvector)
+
+EduBridge AI uses PostgreSQL with the `pgvector` extension for storing textbook knowledge embeddings and vector similarity search.
+
+#### Option A: Using Docker (Recommended & Easiest)
+If you have Docker installed, you can start a PostgreSQL container with `pgvector` pre-installed:
+
+```bash
+docker run -d \
+  --name edubridge-postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=edubridge \
+  -p 5432:5432 \
+  pgvector/pgvector:pg16
+```
+
+#### Option B: Local PostgreSQL Installation
+
+1. **Install PostgreSQL and pgvector**:
+   - **macOS (Homebrew)**:
+     ```bash
+     brew install postgresql@16
+     brew install pgvector
+     brew services start postgresql@16
+     ```
+   - **Ubuntu / Debian**:
+     ```bash
+     sudo apt update
+     sudo apt install -y postgresql postgresql-contrib postgresql-server-dev-16
+     # Install pgvector from source or apt repo
+     sudo apt install -y postgresql-16-pgvector
+     sudo systemctl start postgresql
+     ```
+   - **Windows**:
+     Install PostgreSQL from the official installer and compile/install the `pgvector` extension binaries.
+
+2. **Create the Database & Enable the Extension**:
+   Open your PostgreSQL terminal (`psql`):
+   ```bash
+   psql -U postgres
+   ```
+   Run the following SQL commands:
+   ```sql
+   -- 1. Create the application database
+   CREATE DATABASE edubridge;
+
+   -- 2. Connect to the newly created database
+   \c edubridge
+
+   -- 3. Enable the vector extension for RAG embeddings
+   CREATE EXTENSION IF NOT EXISTS vector;
+
+   -- 4. Verify the extension is installed
+   \dx
+   ```
+   Type `\q` to exit `psql`.
+
+---
+
+### 2. 🐍 Backend Setup
 
 1. **Navigate to the backend directory**:
    ```bash
@@ -133,10 +190,10 @@ Before setting up the project, make sure you have the following installed:
 2. **Create a virtual environment & activate it**:
    ```bash
    python3 -m venv venv
-   source venv/bin/activate  # On Windows use: venv\Scripts\activate
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-3. **Install python packages**:
+3. **Install Python packages**:
    ```bash
    pip install -r requirements.txt
    ```
@@ -146,17 +203,25 @@ Before setting up the project, make sure you have the following installed:
    ```bash
    cp .env.example .env
    ```
-   Populate the environment variables inside `.env`:
-   - `DATABASE_URL`: Your PostgreSQL connection string.
-   - `GEMINI_API_KEY`: Your Gemini API access key.
-   - `SECRET_KEY`: Random cryptographic secret key for JWT signatures.
+   Populate your `.env` with your credentials:
+   ```env
+   DATABASE_URL=postgresql+psycopg://postgres:YOUR_PASSWORD@localhost:5432/edubridge
+   JWT_SECRET_KEY=your-very-secure-secret-key
+   JWT_ALGORITHM=HS256
+   JWT_EXPIRE_MINUTES=1440
+   LLM_API_KEY=your-gemini-api-key
+   LLM_MODEL=gemini-1.5-flash
+   FRONTEND_URL=http://localhost:5173
+   ```
 
 5. **Run Database Migrations**:
+   Applies Alembic schema migrations (users, questions, doubt history, scholarships, textbook chunks):
    ```bash
    alembic upgrade head
    ```
 
-6. **Seed Initial Database Content** (adds textbooks, questions, and mock scholarships):
+6. **Seed Initial Database Content**:
+   Populates textbooks, syllabus chapters, sample questions, and scholarships:
    ```bash
    python3 scripts/seed.py
    ```
@@ -169,7 +234,7 @@ Before setting up the project, make sure you have the following installed:
 
 ---
 
-### 2. Frontend Setup
+### 3. 💻 Frontend Setup
 
 1. **Navigate to the frontend directory**:
    ```bash
@@ -196,6 +261,59 @@ Before setting up the project, make sure you have the following installed:
    npm run dev
    ```
    The application will run locally at [http://localhost:5173](http://localhost:5173).
+
+---
+
+## 🌿 Git Workflow & Pushing Changes
+
+Follow these steps to stage, commit, and push your changes to GitHub:
+
+### 1. Check Current Status
+Verify which files were modified, added, or untracked:
+```bash
+git status
+```
+
+To review specific line-by-line differences:
+```bash
+git diff
+```
+
+### 2. Stage Your Changes
+Stage all modified and new files:
+```bash
+git add .
+```
+*(Or stage specific files individually: `git add backend/ai/llm.py README.md`)*
+
+### 3. Commit Your Changes
+Write a clear, descriptive commit message explaining your updates:
+```bash
+git commit -m "feat: setup postgresql database schema and update documentation"
+```
+
+### 4. Pull Latest Remote Changes (Optional but Recommended)
+Avoid merge conflicts by syncing the latest commits from the remote repository:
+```bash
+git pull --rebase origin main
+```
+
+### 5. Push to GitHub
+Push your committed changes to the remote branch:
+
+- **Pushing directly to `main`**:
+  ```bash
+  git push origin main
+  ```
+
+- **Pushing to a new Feature Branch**:
+  ```bash
+  # Create and switch to a feature branch
+  git checkout -b feature/your-feature-name
+
+  # Push branch and set upstream tracking
+  git push -u origin feature/your-feature-name
+  ```
 
 ---
 
