@@ -19,7 +19,7 @@ export const Landing: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+    <div className="min-h-screen flex flex-col font-sans landing-gradient" style={{ color: 'var(--text-primary)' }}>
       {/* ─── Sticky Header ────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 glass border-b" style={{ borderColor: 'var(--border-default)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
@@ -30,7 +30,6 @@ export const Landing: React.FC = () => {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
             <a href="#features" className="hover:opacity-80 transition-opacity">Features</a>
             <a href="#demo" className="hover:opacity-80 transition-opacity">Interactive Demo</a>
-            <a href="#scholarships" className="hover:opacity-80 transition-opacity">Scholarships</a>
             <a href="#impact" className="hover:opacity-80 transition-opacity">Our Impact</a>
           </nav>
 
@@ -124,7 +123,7 @@ export const Landing: React.FC = () => {
               </h1>
 
               <p className="text-lg sm:text-xl max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                Step-by-step explanations in your regional language, adaptive practice that detects learning gaps, and scholarship matching tailored for every student.
+                Step-by-step explanations in your regional language, adaptive practice that detects learning gaps, and daily contests to sharpen your skills.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
@@ -161,7 +160,7 @@ export const Landing: React.FC = () => {
                 {[
                   { label: '100% Textbook Grounded', color: 'var(--brand-text)', bg: 'var(--brand-bg)' },
                   { label: 'Multilingual Support', color: 'var(--success-text)', bg: 'var(--success-bg)' },
-                  { label: 'Smart Scholarships', color: 'var(--warning-text)', bg: 'var(--warning-bg)' },
+                  { label: 'Daily Contests', color: 'var(--warning-text)', bg: 'var(--warning-bg)' },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-2.5">
                     <div
@@ -180,7 +179,6 @@ export const Landing: React.FC = () => {
 
             {/* Right Visual / Hero Card Mockup */}
             <div className="lg:col-span-5 relative flex justify-center animate-fade-up stagger-2">
-              {/* Circular Gradient Backdrop */}
               <div
                 className="relative w-80 h-80 sm:w-96 sm:h-96 rounded-full flex items-center justify-center p-6"
                 style={{
@@ -188,7 +186,6 @@ export const Landing: React.FC = () => {
                   border: '1px solid var(--brand-border)',
                 }}
               >
-                {/* Main Hero Card */}
                 <div
                   className="w-full rounded-2xl p-5 space-y-3.5 hover-lift"
                   style={{
@@ -240,7 +237,7 @@ export const Landing: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Floating Badge 1: Top Right */}
+                {/* Floating Badge 1 */}
                 <div
                   className="absolute -top-4 -right-4 sm:-right-6 p-3 rounded-xl flex items-center gap-2.5 animate-float-slow"
                   style={{
@@ -258,7 +255,7 @@ export const Landing: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Floating Badge 2: Bottom Left */}
+                {/* Floating Badge 2 */}
                 <div
                   className="absolute -bottom-4 -left-4 sm:-left-6 p-3 rounded-xl flex items-center gap-2.5 animate-float-slow [animation-delay:2s]"
                   style={{
@@ -288,7 +285,7 @@ export const Landing: React.FC = () => {
             {[
               { value: '50,000+', label: 'Doubts Solved', color: 'var(--text-primary)' },
               { value: '100%', label: 'Grounded Answers', color: 'var(--brand-text)' },
-              { value: '8+', label: 'Active Scholarships', color: 'var(--text-primary)' },
+              { value: '500+', label: 'Daily Contestants', color: 'var(--text-primary)' },
               { value: 'Free', label: 'Accessible for Everyone', color: 'var(--success-text)' },
             ].map((stat) => (
               <div key={stat.label} className="pt-4 md:pt-0">
@@ -305,16 +302,16 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* ─── Value Props / Features ───────────────────────────────────── */}
-      <section className="py-20" id="features" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <section className="py-20" id="features" style={{ backgroundColor: 'transparent' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <h2 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--brand-text)' }}>
               Built For Real Learning
             </h2>
             <p className="text-3xl sm:text-4xl font-bold font-heading" style={{ color: 'var(--text-primary)' }}>
-              Everything students and educators need in one platform.
+              Everything students need in one platform.
             </p>
-            <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
+            <p className="text-base mx-auto" style={{ color: 'var(--text-secondary)', maxWidth: '48ch' }}>
               Powered by Retrieval-Augmented Generation (RAG) and Gemini AI to guarantee factual, curriculum-aligned guidance.
             </p>
           </div>
@@ -322,30 +319,33 @@ export const Landing: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                emoji: '📖',
                 title: 'Grounded Doubt Solver',
                 description: 'Never get hallucinated answers. Every explanation is grounded in NCERT textbooks and verified open educational content, complete with source chapter citations.',
                 accentBg: 'var(--brand-bg)',
                 accentColor: 'var(--brand-text)',
+                accentBorder: 'var(--brand-border)',
+                iconPath: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z',
               },
               {
-                emoji: '🎯',
                 title: 'Adaptive Practice',
                 description: 'Smart weakness targeting. The system identifies topics where you struggle and automatically generates practice questions calibrated to your skill level.',
                 accentBg: 'var(--success-bg)',
                 accentColor: 'var(--success-text)',
+                accentBorder: 'var(--success-border)',
+                iconPath: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
               },
               {
-                emoji: '🎓',
-                title: 'Scholarship Matching',
-                description: 'Discover government and private financial aid. Matches eligibility criteria (grade, state, category) with direct application links and deadlines.',
-                accentBg: 'rgba(139, 92, 246, 0.1)',
-                accentColor: '#8b5cf6',
+                title: 'Daily Contests',
+                description: 'Compete in domain-specific daily challenges. Earn an Elo-style rating, track your progress, and climb the leaderboard among your peers.',
+                accentBg: 'var(--warning-bg)',
+                accentColor: 'var(--warning-text)',
+                accentBorder: 'var(--warning-border)',
+                iconPath: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
               },
             ].map((feature) => (
               <div
                 key={feature.title}
-                className="p-8 rounded-2xl space-y-4 hover-lift"
+                className="p-8 rounded-2xl space-y-4 card-hover"
                 style={{
                   backgroundColor: 'var(--bg-surface)',
                   border: '1px solid var(--border-default)',
@@ -353,10 +353,12 @@ export const Landing: React.FC = () => {
                 }}
               >
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                  style={{ backgroundColor: feature.accentBg, color: feature.accentColor }}
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: feature.accentBg, color: feature.accentColor, border: `1px solid ${feature.accentBorder}` }}
                 >
-                  {feature.emoji}
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={feature.iconPath} />
+                  </svg>
                 </div>
                 <h3 className="text-xl font-bold font-heading" style={{ color: 'var(--text-primary)' }}>
                   {feature.title}
@@ -393,7 +395,6 @@ export const Landing: React.FC = () => {
               boxShadow: 'var(--shadow-sm)',
             }}
           >
-            {/* Input Bar */}
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="text"
@@ -423,7 +424,6 @@ export const Landing: React.FC = () => {
               </button>
             </div>
 
-            {/* Answer Display */}
             {demoAnswerShown && (
               <div
                 className="rounded-xl p-6 space-y-5 animate-fade-up"
@@ -481,7 +481,6 @@ export const Landing: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Formula Box */}
                   <div
                     className="p-3.5 rounded-xl text-center font-mono text-xs sm:text-sm"
                     style={{
@@ -494,7 +493,6 @@ export const Landing: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Sources Citation */}
                 <div
                   className="pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs"
                   style={{ borderTop: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}
@@ -539,8 +537,7 @@ export const Landing: React.FC = () => {
               <ul className="space-y-2 text-xs" style={{ color: 'var(--text-muted)' }}>
                 <li><Link to="/register" className="hover:opacity-70 transition-opacity">Doubt Solver</Link></li>
                 <li><Link to="/register" className="hover:opacity-70 transition-opacity">Adaptive Practice</Link></li>
-                <li><Link to="/register" className="hover:opacity-70 transition-opacity">Scholarship Matcher</Link></li>
-                <li><Link to="/register" className="hover:opacity-70 transition-opacity">Teacher Insights</Link></li>
+                <li><Link to="/register" className="hover:opacity-70 transition-opacity">Daily Contests</Link></li>
               </ul>
             </div>
 
@@ -550,9 +547,7 @@ export const Landing: React.FC = () => {
               </h4>
               <ul className="space-y-2 text-xs" style={{ color: 'var(--text-muted)' }}>
                 <li><Link to="/login" className="hover:opacity-70 transition-opacity">Student Login</Link></li>
-                <li><Link to="/login" className="hover:opacity-70 transition-opacity">Teacher Login</Link></li>
                 <li><a href="https://ncert.nic.in" target="_blank" rel="noreferrer" className="hover:opacity-70 transition-opacity">NCERT Sources</a></li>
-                <li><a href="https://scholarships.gov.in" target="_blank" rel="noreferrer" className="hover:opacity-70 transition-opacity">National Scholarship Portal</a></li>
               </ul>
             </div>
           </div>

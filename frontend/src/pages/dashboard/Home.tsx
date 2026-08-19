@@ -2,8 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { practiceApi } from '../../api/practice';
-import { scholarshipsApi } from '../../api/scholarships';
-import type { PracticeQuestion, ScholarshipMatch } from '../../types';
+import type { PracticeQuestion } from '../../types';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 const ArrowIcon = () => (
@@ -25,10 +24,9 @@ const TargetIcon = () => (
   </svg>
 );
 
-const ScholarshipIcon = () => (
+const ContestIcon = () => (
   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l6.16-3.42a12.08 12.08 0 01.67 6.48A11.95 11.95 0 0012 20.06a11.95 11.95 0 00-6.82-3 12.08 12.08 0 01.66-6.48L12 14z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
   </svg>
 );
 
@@ -49,7 +47,6 @@ export const DashboardHome: React.FC = () => {
   const isTeacher = user?.role === 'teacher';
 
   const [nextQuestion, setNextQuestion] = useState<PracticeQuestion | null>(null);
-  const [scholarships, setScholarships] = useState<ScholarshipMatch[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -60,17 +57,8 @@ export const DashboardHome: React.FC = () => {
       }
 
       try {
-        const [qRes, sRes] = await Promise.allSettled([
-          practiceApi.getNextQuestion(),
-          scholarshipsApi.getMatches(),
-        ]);
-
-        if (qRes.status === 'fulfilled') {
-          setNextQuestion(qRes.value);
-        }
-        if (sRes.status === 'fulfilled') {
-          setScholarships(sRes.value.matches.slice(0, 2));
-        }
+        const qRes = await practiceApi.getNextQuestion();
+        setNextQuestion(qRes);
       } catch (e) {
         console.error(e);
       } finally {
@@ -105,14 +93,14 @@ export const DashboardHome: React.FC = () => {
       accentBorder: 'var(--success-border)',
     },
     {
-      title: 'Scholarship Matcher',
-      description: 'Review financial-aid opportunities matched to your profile and eligibility.',
-      href: '/dashboard/scholarships',
-      cta: 'View matches',
-      icon: <ScholarshipIcon />,
-      accentBg: 'rgba(139, 92, 246, 0.1)',
-      accentText: '#8b5cf6',
-      accentBorder: 'rgba(139, 92, 246, 0.25)',
+      title: 'Daily Contest',
+      description: 'Compete in daily domain challenges. Boost your rating and climb the leaderboard.',
+      href: '/dashboard/contest',
+      cta: 'Join contest',
+      icon: <ContestIcon />,
+      accentBg: 'rgba(245, 158, 11, 0.1)',
+      accentText: 'var(--warning-text)',
+      accentBorder: 'var(--warning-border)',
     },
   ];
 
@@ -129,22 +117,35 @@ export const DashboardHome: React.FC = () => {
         >
           <div className="grid gap-0 lg:grid-cols-[1.45fr_0.9fr]">
             <div
-              className="px-5 py-7 text-white sm:px-8 sm:py-9 lg:px-10"
-              style={{ backgroundColor: '#0f172a' }}
+              className="px-5 py-7 sm:px-8 sm:py-9 lg:px-10"
+              style={{
+                backgroundColor: 'var(--bg-elevated)',
+              }}
             >
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-blue-100">
+              <div
+                className="mb-5 inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em]"
+                style={{
+                  backgroundColor: 'var(--brand-bg)',
+                  border: '1px solid var(--brand-border)',
+                  color: 'var(--brand-text)',
+                }}
+              >
                 Educator Portal
               </div>
-              <h1 className="max-w-2xl text-3xl font-extrabold leading-tight sm:text-4xl">
+              <h1 className="max-w-2xl text-3xl font-extrabold leading-tight sm:text-4xl" style={{ color: 'var(--text-primary)' }}>
                 Welcome, {user?.name || 'Teacher'}.
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
+              <p className="mt-3 max-w-2xl text-sm leading-6 sm:text-base" style={{ color: 'var(--text-secondary)' }}>
                 Track class comprehension, spot repeated mistakes, and move quickly from insight to intervention.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <Link
                   to="/dashboard/teacher-insights"
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-slate-950/20 transition-all hover:-translate-y-0.5 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-white/70"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white shadow-lg transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2"
+                  style={{
+                    backgroundColor: 'var(--brand-text)',
+                    boxShadow: 'var(--shadow-brand)',
+                  }}
                 >
                   View Class Insights
                   <ArrowIcon />
@@ -176,7 +177,7 @@ export const DashboardHome: React.FC = () => {
           ].map(([title, text]) => (
             <div
               key={title}
-              className="rounded-2xl p-5 hover-lift"
+              className="rounded-2xl p-5 card-hover"
               style={{
                 backgroundColor: 'var(--bg-surface)',
                 border: '1px solid var(--border-default)',
@@ -200,42 +201,64 @@ export const DashboardHome: React.FC = () => {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 sm:space-y-8 animate-fade-up">
+      {/* Hero banner */}
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.85fr)]">
         <div
-          className="relative overflow-hidden rounded-[1.75rem] p-5 text-white sm:p-8 lg:p-10"
+          className="relative overflow-hidden rounded-[1.75rem] p-5 sm:p-8 lg:p-10"
           style={{
-            backgroundColor: '#0f172a',
+            backgroundColor: 'var(--bg-surface)',
             border: '1px solid var(--border-default)',
             boxShadow: 'var(--shadow-sm)',
           }}
         >
           <div className="relative z-10 max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-blue-100">
-              Student Dashboard
+            <div
+              className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em]"
+              style={{
+                backgroundColor: 'var(--brand-bg)',
+                border: '1px solid var(--brand-border)',
+                color: 'var(--brand-text)',
+              }}
+            >
+              Dashboard
             </div>
-            <h1 className="mt-5 text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
+            <h1 className="mt-5 text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl" style={{ color: 'var(--text-primary)' }}>
               Ready for today's learning, {firstName}?
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-              Jump into a grounded explanation, continue adaptive practice, or review opportunities matched to your profile.
+            <p className="mt-4 max-w-2xl text-sm leading-6 sm:text-base" style={{ color: 'var(--text-secondary)' }}>
+              Jump into a grounded explanation, continue adaptive practice, or compete in today's contest.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
                 to="/dashboard/doubt-solver"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-slate-950/20 transition-all hover:-translate-y-0.5 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-white/70"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 focus:outline-none focus-ring hover-lift"
+                style={{
+                  backgroundColor: 'var(--brand-text)',
+                  boxShadow: 'var(--shadow-brand)',
+                }}
               >
                 Ask a Doubt
                 <ArrowIcon />
               </Link>
               <Link
                 to="/dashboard/practice"
-                className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/50"
+                className="inline-flex min-h-12 items-center justify-center rounded-xl border px-5 py-3 text-sm font-bold transition-all hover:-translate-y-0.5 focus:outline-none focus-ring hover-lift"
+                style={{
+                  backgroundColor: 'var(--bg-secondary)',
+                  borderColor: 'var(--border-default)',
+                  color: 'var(--text-primary)',
+                }}
               >
                 Start Practice Session
               </Link>
             </div>
           </div>
-          <div className="absolute right-0 top-0 h-full w-1/2 bg-[radial-gradient(circle_at_70%_35%,rgba(59,130,246,0.32),transparent_34%),radial-gradient(circle_at_45%_75%,rgba(16,185,129,0.22),transparent_30%)]" />
+          <div
+            className="absolute right-0 top-0 h-full w-1/2 pointer-events-none opacity-60"
+            style={{
+              background: 'radial-gradient(circle at 70% 35%, var(--brand-glow), transparent 60%), radial-gradient(circle at 45% 75%, rgba(16,185,129,0.15), transparent 50%)',
+            }}
+          />
         </div>
 
         <aside
@@ -262,7 +285,7 @@ export const DashboardHome: React.FC = () => {
           <div className="mt-6 grid grid-cols-3 gap-2">
             {[
               ['7', 'day streak'],
-              ['2', 'matches'],
+              ['1247', 'rating'],
               ['1', 'next task'],
             ].map(([value, label]) => (
               <div
@@ -282,18 +305,19 @@ export const DashboardHome: React.FC = () => {
           >
             <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Recommended next step</p>
             <p className="mt-1 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
-              Answer one adaptive question before browsing scholarships.
+              Answer one adaptive question, then join today's daily contest.
             </p>
           </div>
         </aside>
       </section>
 
+      {/* Action Cards */}
       <section className="grid gap-4 md:grid-cols-3">
         {actionCards.map((card, index) => (
           <Link
             key={card.title}
             to={card.href}
-            className={`group rounded-2xl p-5 transition-all hover-lift focus:outline-none focus-ring animate-fade-up stagger-${index + 1}`}
+            className={`group rounded-2xl p-5 transition-all card-hover focus:outline-none focus-ring animate-fade-up stagger-${index + 1}`}
             style={{
               backgroundColor: 'var(--bg-surface)',
               border: '1px solid var(--border-default)',
@@ -318,9 +342,10 @@ export const DashboardHome: React.FC = () => {
         ))}
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-12">
+      {/* Practice Queue */}
+      <section>
         <div
-          className="rounded-[1.5rem] p-5 sm:p-6 lg:col-span-7"
+          className="rounded-[1.5rem] p-5 sm:p-6"
           style={{
             backgroundColor: 'var(--bg-surface)',
             border: '1px solid var(--border-default)',
@@ -410,81 +435,6 @@ export const DashboardHome: React.FC = () => {
                 style={{ backgroundColor: 'var(--brand-text)' }}
               >
                 Generate Question
-                <ArrowIcon />
-              </Link>
-            </div>
-          )}
-        </div>
-
-        <div
-          className="rounded-[1.5rem] p-5 sm:p-6 lg:col-span-5"
-          style={{
-            backgroundColor: 'var(--bg-surface)',
-            border: '1px solid var(--border-default)',
-            boxShadow: 'var(--shadow-sm)',
-          }}
-        >
-          <div className="flex flex-col gap-3 pb-5 sm:flex-row sm:items-center sm:justify-between" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>Financial Aid</p>
-              <h2 className="mt-1 text-xl font-extrabold" style={{ color: 'var(--text-primary)' }}>Top scholarships</h2>
-            </div>
-            <Link
-              to="/dashboard/scholarships"
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-colors"
-              style={{
-                border: '1px solid var(--border-default)',
-                color: 'var(--text-secondary)',
-              }}
-            >
-              View all
-              <ArrowIcon />
-            </Link>
-          </div>
-
-          {loading ? (
-            <div className="flex min-h-56 items-center justify-center">
-              <LoadingSpinner size="sm" text="Loading matches..." />
-            </div>
-          ) : scholarships.length > 0 ? (
-            <div style={{ borderColor: 'var(--border-subtle)' }}>
-              {scholarships.map((s) => (
-                <article key={s.scholarship_id} className="py-4 first:pt-5 last:pb-0" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                  <div className="flex items-start justify-between gap-3">
-                    <span
-                      className="shrink-0 rounded-full px-3 py-1 text-xs font-bold"
-                      style={{ backgroundColor: 'var(--success-bg)', color: 'var(--success-text)', border: '1px solid var(--success-border)' }}
-                    >
-                      {s.match_score}% match
-                    </span>
-                    {s.deadline && (
-                      <span className="text-right text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>
-                        Due {s.deadline}
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="mt-3 line-clamp-2 text-sm font-extrabold leading-6" style={{ color: 'var(--text-primary)' }}>
-                    {s.name}
-                  </h3>
-                  <p className="mt-1 truncate text-sm" style={{ color: 'var(--text-muted)' }}>{s.provider}</p>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div
-              className="flex min-h-56 flex-col items-center justify-center rounded-2xl px-4 py-8 text-center"
-              style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}
-            >
-              <h3 className="text-base font-extrabold" style={{ color: 'var(--text-primary)' }}>No matches yet</h3>
-              <p className="mt-2 max-w-xs text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
-                Check your eligibility profile to surface matched scholarship opportunities.
-              </p>
-              <Link
-                to="/dashboard/scholarships"
-                className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-white transition-colors"
-                style={{ backgroundColor: 'var(--text-primary)' }}
-              >
-                Check Eligibility
                 <ArrowIcon />
               </Link>
             </div>

@@ -5,20 +5,58 @@ import { authApi } from '../api/auth';
 import { useAuth } from '../contexts/AuthContext';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
+const STREAMS = ['Science', 'Arts', 'Commerce'];
+
+const UG_DOMAINS = [
+  'Computer Science Engineering',
+  'Information Technology',
+  'Electronics & Communication',
+  'Electrical & Electronics',
+  'Mechanical',
+  'Civil',
+  'Chemical',
+  'Aerospace',
+  'Biotechnology',
+  'Instrumentation',
+];
+
+const PG_DOMAINS = [
+  'M.Tech Computer Science',
+  'M.Tech Electronics & Communication',
+  'M.Tech Electrical & Electronics',
+  'M.Tech Mechanical',
+  'M.Tech Civil',
+  'M.Tech Chemical',
+  'M.Tech Aerospace',
+  'M.Tech Biotechnology',
+  'MBA',
+  'MCA',
+  'MSc Computer Science',
+  'MSc Mathematics',
+  'MSc Physics',
+];
+
 export const Register: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'student' | 'teacher'>('student');
   const [grade, setGrade] = useState('10');
   const [preferredLanguage, setPreferredLanguage] = useState('English');
-  const [learningLevel, setLearningLevel] = useState('beginner');
+
+  // Conditional fields based on grade
+  const [stream, setStream] = useState('Science');
+  const [ugDomain, setUgDomain] = useState(UG_DOMAINS[0]);
+  const [pgDomain, setPgDomain] = useState(PG_DOMAINS[0]);
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  const showStream = grade === '11' || grade === '12';
+  const showUgDomain = grade === 'UG';
+  const showPgDomain = grade === 'PG';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,17 +67,29 @@ export const Register: React.FC = () => {
       return;
     }
 
+    // TODO: backend Student model only has `learning_level` (string), not stream/domain columns.
+    // We map the conditional field into learning_level as a best-fit string for now.
+    // Backend follow-up: add stream, ug_domain, pg_domain columns to Student model.
+    let learningLevelValue = 'beginner';
+    if (showStream) {
+      learningLevelValue = stream;
+    } else if (showUgDomain) {
+      learningLevelValue = ugDomain;
+    } else if (showPgDomain) {
+      learningLevelValue = pgDomain;
+    }
+
     setLoading(true);
     try {
-      // 1. Register account
+      // 1. Register account (always as student)
       await authApi.register({
         name: name.trim(),
         email: email.trim(),
         password,
-        role,
-        grade: role === 'student' ? grade : undefined,
-        preferred_language: role === 'student' ? preferredLanguage : undefined,
-        learning_level: role === 'student' ? learningLevel : undefined,
+        role: 'student',
+        grade,
+        preferred_language: preferredLanguage,
+        learning_level: learningLevelValue,
       });
 
       // 2. Automatically log in after registration
@@ -49,12 +99,7 @@ export const Register: React.FC = () => {
       });
 
       login(loginData.access_token, loginData.user);
-
-      if (loginData.user.role === 'teacher') {
-        navigate('/dashboard/teacher-insights', { replace: true });
-      } else {
-        navigate('/dashboard', { replace: true });
-      }
+      navigate('/dashboard', { replace: true });
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -85,7 +130,7 @@ export const Register: React.FC = () => {
           className="text-2xl sm:text-3xl font-extrabold font-heading"
           style={{ color: 'var(--text-primary)' }}
         >
-          Create an account
+          Create your student account
         </h2>
         <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
           Join EduBridge AI for grounded, personalized learning
@@ -118,42 +163,6 @@ export const Register: React.FC = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Role Selection Tabs */}
-            <div>
-              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
-                I am a:
-              </label>
-              <div
-                className="grid grid-cols-2 gap-2 p-1 rounded-xl"
-                style={{ backgroundColor: 'var(--bg-secondary)' }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setRole('student')}
-                  className="py-2 text-xs font-bold rounded-lg transition-all"
-                  style={{
-                    backgroundColor: role === 'student' ? 'var(--bg-surface)' : 'transparent',
-                    color: role === 'student' ? 'var(--brand-text)' : 'var(--text-secondary)',
-                    boxShadow: role === 'student' ? 'var(--shadow-sm)' : 'none',
-                  }}
-                >
-                  🎓 Student
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('teacher')}
-                  className="py-2 text-xs font-bold rounded-lg transition-all"
-                  style={{
-                    backgroundColor: role === 'teacher' ? 'var(--bg-surface)' : 'transparent',
-                    color: role === 'teacher' ? 'var(--brand-text)' : 'var(--text-secondary)',
-                    boxShadow: role === 'teacher' ? 'var(--shadow-sm)' : 'none',
-                  }}
-                >
-                  👩‍🏫 Teacher / Educator
-                </button>
-              </div>
-            </div>
-
             {/* Name */}
             <div>
               <label className="block text-xs font-semibold mb-1.5" htmlFor="name" style={{ color: 'var(--text-secondary)' }}>
@@ -205,71 +214,118 @@ export const Register: React.FC = () => {
               />
             </div>
 
-            {/* Student-specific Profile Customization */}
-            {role === 'student' && (
-              <div className="space-y-4 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold mb-1.5" htmlFor="grade" style={{ color: 'var(--text-secondary)' }}>
-                      Class / Grade
-                    </label>
-                    <select
-                      id="grade"
-                      value={grade}
-                      onChange={(e) => setGrade(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2"
-                      style={inputStyle}
-                    >
-                      <option value="6">Class 6</option>
-                      <option value="7">Class 7</option>
-                      <option value="8">Class 8</option>
-                      <option value="9">Class 9</option>
-                      <option value="10">Class 10</option>
-                      <option value="11">Class 11</option>
-                      <option value="12">Class 12</option>
-                      <option value="College">Undergraduate</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold mb-1.5" htmlFor="language" style={{ color: 'var(--text-secondary)' }}>
-                      Preferred Language
-                    </label>
-                    <select
-                      id="language"
-                      value={preferredLanguage}
-                      onChange={(e) => setPreferredLanguage(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2"
-                      style={inputStyle}
-                    >
-                      <option value="English">English</option>
-                      <option value="Bengali">Bengali (বাংলা)</option>
-                      <option value="Hindi">Hindi (हिंदी)</option>
-                      <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
-                      <option value="Tamil">Tamil (தமிழ்)</option>
-                      <option value="Telugu">Telugu (తెలుగు)</option>
-                    </select>
-                  </div>
-                </div>
-
+            {/* Student Profile Fields */}
+            <div className="space-y-4 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5" htmlFor="level" style={{ color: 'var(--text-secondary)' }}>
-                    Learning Level
+                  <label className="block text-xs font-semibold mb-1.5" htmlFor="grade" style={{ color: 'var(--text-secondary)' }}>
+                    Class / Grade
                   </label>
                   <select
-                    id="level"
-                    value={learningLevel}
-                    onChange={(e) => setLearningLevel(e.target.value)}
+                    id="grade"
+                    value={grade}
+                    onChange={(e) => setGrade(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2"
                     style={inputStyle}
                   >
-                    <option value="beginner">Beginner (Foundational concepts)</option>
-                    <option value="intermediate">Intermediate (Standard curriculum)</option>
-                    <option value="advanced">Advanced (Exam prep & problem solving)</option>
+                    <option value="6">Class 6</option>
+                    <option value="7">Class 7</option>
+                    <option value="8">Class 8</option>
+                    <option value="9">Class 9</option>
+                    <option value="10">Class 10</option>
+                    <option value="11">Class 11</option>
+                    <option value="12">Class 12</option>
+                    <option value="UG">Undergraduate (UG)</option>
+                    <option value="PG">Postgraduate (PG)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold mb-1.5" htmlFor="language" style={{ color: 'var(--text-secondary)' }}>
+                    Preferred Language
+                  </label>
+                  <select
+                    id="language"
+                    value={preferredLanguage}
+                    onChange={(e) => setPreferredLanguage(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2"
+                    style={inputStyle}
+                  >
+                    <option value="English">English</option>
+                    <option value="Bengali">Bengali (বাংলা)</option>
+                    <option value="Hindi">Hindi (हिंदी)</option>
+                    <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+                    <option value="Tamil">Tamil (தமிழ்)</option>
+                    <option value="Telugu">Telugu (తెలుగు)</option>
                   </select>
                 </div>
               </div>
-            )}
+
+              {/* Conditional Stream field for Grade 11/12 */}
+              {showStream && (
+                <div className="animate-fade-up">
+                  <label className="block text-xs font-semibold mb-1.5" htmlFor="stream" style={{ color: 'var(--text-secondary)' }}>
+                    Stream <span style={{ color: 'var(--danger-text)' }}>*</span>
+                  </label>
+                  <select
+                    id="stream"
+                    required
+                    value={stream}
+                    onChange={(e) => setStream(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2"
+                    style={inputStyle}
+                  >
+                    {STREAMS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Conditional UG Domain field */}
+              {showUgDomain && (
+                <div className="animate-fade-up">
+                  <label className="block text-xs font-semibold mb-1.5" htmlFor="ugDomain" style={{ color: 'var(--text-secondary)' }}>
+                    UG Domain <span style={{ color: 'var(--danger-text)' }}>*</span>
+                  </label>
+                  {/* TODO: backend Student model has no ug_domain column — this is stored as learning_level for now */}
+                  <select
+                    id="ugDomain"
+                    required
+                    value={ugDomain}
+                    onChange={(e) => setUgDomain(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2"
+                    style={inputStyle}
+                  >
+                    {UG_DOMAINS.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Conditional PG Domain field */}
+              {showPgDomain && (
+                <div className="animate-fade-up">
+                  <label className="block text-xs font-semibold mb-1.5" htmlFor="pgDomain" style={{ color: 'var(--text-secondary)' }}>
+                    PG Domain <span style={{ color: 'var(--danger-text)' }}>*</span>
+                  </label>
+                  {/* TODO: backend Student model has no pg_domain column — this is stored as learning_level for now */}
+                  <select
+                    id="pgDomain"
+                    required
+                    value={pgDomain}
+                    onChange={(e) => setPgDomain(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2"
+                    style={inputStyle}
+                  >
+                    {PG_DOMAINS.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
 
             <button
               type="submit"

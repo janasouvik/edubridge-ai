@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useOutletContext } from 'react-router-dom';
 import { doubtsApi } from '../../api/doubts';
 import type { DoubtResponse, Source } from '../../types';
@@ -30,6 +30,7 @@ export const DoubtSolver: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [feedbackGiven, setFeedbackGiven] = useState<'up' | 'down' | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Message thread
   const [messages, setMessages] = useState<Message[]>([
@@ -79,6 +80,11 @@ export const DoubtSolver: React.FC = () => {
       handleAsk(query);
     }
   }, [searchParams]);
+
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
 
   const handleAsk = async (queryText?: string) => {
     const textToSend = queryText || question;
@@ -135,7 +141,7 @@ export const DoubtSolver: React.FC = () => {
     const lines = text.split('\n').filter((l) => l.trim().length > 0);
 
     return (
-      <div className="space-y-3.5 text-slate-800 text-sm leading-relaxed">
+      <div className="space-y-3.5 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
         {lines.map((line, idx) => {
           // Check for numbered points (e.g. 1., 2., 1), etc.)
           const stepMatch = line.match(/^(\d+)[\.\)]\s*(.+)/);
@@ -143,11 +149,11 @@ export const DoubtSolver: React.FC = () => {
             const stepNumber = stepMatch[1];
             const stepContent = stepMatch[2];
             return (
-              <div key={idx} className="flex items-start gap-3 bg-slate-50/70 p-3 rounded-xl border border-slate-100/80">
-                <span className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+              <div key={idx} className="flex items-start gap-3 p-3 rounded-xl" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+                <span className="w-6 h-6 rounded-full text-white font-bold text-xs flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: 'var(--brand-text)', boxShadow: 'var(--shadow-sm)' }}>
                   {stepNumber}
                 </span>
-                <div className="flex-1 font-normal text-slate-700">
+                <div className="flex-1 font-normal" style={{ color: 'var(--text-secondary)' }}>
                   <span dangerouslySetInnerHTML={{ __html: formatInline(stepContent) }} />
                 </div>
               </div>
@@ -157,8 +163,8 @@ export const DoubtSolver: React.FC = () => {
           // Check for formula or equation blocks
           if (line.includes('→') || line.includes('=') || line.includes('CO₂') || line.includes('ax²') || line.includes('6CO2')) {
             return (
-              <div key={idx} className="p-3.5 bg-emerald-50/80 border border-emerald-200/80 rounded-xl text-emerald-950 font-mono text-xs sm:text-sm text-center shadow-2xs flex items-center justify-center gap-2 my-2">
-                <span className="text-emerald-600">🌿</span>
+              <div key={idx} className="p-3.5 rounded-xl font-mono text-xs sm:text-sm text-center flex items-center justify-center gap-2 my-2" style={{ backgroundColor: 'var(--success-bg)', border: '1px solid var(--success-border)', color: 'var(--success-text)' }}>
+                <span>🌿</span>
                 <span className="font-semibold">{line.replace(/^[-*•]\s*/, '')}</span>
               </div>
             );
@@ -166,7 +172,7 @@ export const DoubtSolver: React.FC = () => {
 
           // Standard paragraph line
           return (
-            <p key={idx} className="text-slate-700">
+            <p key={idx} style={{ color: 'var(--text-secondary)' }}>
               <span dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
             </p>
           );
@@ -178,24 +184,24 @@ export const DoubtSolver: React.FC = () => {
   // Format bold text
   const formatInline = (str: string) => {
     return str
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-slate-900">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em class="text-slate-800">$1</em>');
+      .replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight:600;color:var(--text-primary)">$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em style="color:var(--text-primary)">$1</em>');
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto flex flex-col" style={{ height: 'calc(100vh - 8rem)' }}>
       {/* Top Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl mb-4 flex-shrink-0" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-sm)' }}>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 font-heading">
+            <h1 className="text-xl sm:text-2xl font-extrabold font-heading" style={{ color: 'var(--text-primary)' }}>
               Doubt Solver (Grounded)
             </h1>
-            <span className="text-blue-600 bg-blue-50 p-1 rounded-full text-xs" title="Grounded in Textbook Citations">
+            <span className="p-1 rounded-full text-xs" title="Grounded in Textbook Citations" style={{ backgroundColor: 'var(--brand-bg)', color: 'var(--brand-text)' }}>
               🛡️
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
             Get step-by-step explanations from verified textbook sources.
           </p>
         </div>
@@ -205,7 +211,8 @@ export const DoubtSolver: React.FC = () => {
           <select
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 transition-all"
+            style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-default)', color: 'var(--text-secondary)' }}
           >
             <option value="Science">Science</option>
             <option value="Biology">Biology</option>
@@ -215,15 +222,16 @@ export const DoubtSolver: React.FC = () => {
           </select>
 
           {/* Explain in Language selector */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700">
-            <span className="text-slate-500">Explain in:</span>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium" style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-default)', color: 'var(--text-secondary)' }}>
+            <span style={{ color: 'var(--text-muted)' }}>Explain in:</span>
             <select
               value={language}
               onChange={(e) => {
                 setLanguage(e.target.value);
                 outletContext?.setSelectedLanguage(e.target.value);
               }}
-              className="bg-transparent font-semibold text-blue-600 focus:outline-none cursor-pointer"
+              className="bg-transparent font-semibold focus:outline-none cursor-pointer"
+              style={{ color: 'var(--brand-text)' }}
             >
               <option value="English">English</option>
               <option value="Bengali">Bengali</option>
@@ -233,26 +241,81 @@ export const DoubtSolver: React.FC = () => {
               <option value="Telugu">Telugu</option>
             </select>
           </div>
-
-          <button
-            type="button"
-            onClick={() => alert('Text-to-speech reading feature ready')}
-            className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-            title="Read aloud"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-            </svg>
-          </button>
         </div>
       </div>
 
-      {/* Main 2-Column Grid: Left Q&A Thread, Right Sources & Citations */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Q&A Flow (8 cols) */}
-        <div className="lg:col-span-8 space-y-6">
-          {/* Top Prompt Input */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+      {/* Main 2-Column Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
+        {/* Left Column: Q&A Flow */}
+        <div className="lg:col-span-8 flex flex-col min-h-0">
+          {/* Error display */}
+          {error && (
+            <div className="p-4 text-sm rounded-xl flex items-center justify-between mb-3 flex-shrink-0" style={{ backgroundColor: 'var(--danger-bg)', border: '1px solid var(--danger-border)', color: 'var(--danger-text)' }}>
+              <span>{error}</span>
+              <button onClick={() => setError(null)} className="font-bold" style={{ color: 'var(--danger-text)' }}>×</button>
+            </div>
+          )}
+
+          {/* Scrollable Message Thread */}
+          <div className="flex-1 overflow-y-auto space-y-6 pb-4 pr-1">
+            {messages.map((msg) => (
+              <div key={msg.id} className="space-y-2">
+                {msg.sender === 'user' ? (
+                  <div className="flex justify-end">
+                    <div className="max-w-2xl p-4 rounded-2xl rounded-tr-sm text-sm text-white" style={{ backgroundColor: 'var(--brand-text)', boxShadow: 'var(--shadow-sm)' }}>
+                      <p className="font-medium">{msg.text}</p>
+                      <span className="text-[10px] block text-right mt-1" style={{ opacity: 0.7 }}>{msg.timestamp}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 rounded-2xl space-y-4" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-sm)' }}>
+                    <div className="flex items-center justify-between pb-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full text-white flex items-center justify-center font-bold text-xs" style={{ background: 'linear-gradient(135deg, var(--brand-text), #6366f1)', boxShadow: 'var(--shadow-sm)' }}>
+                          AI
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>EduBridge AI Tutor</h3>
+                          <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{msg.timestamp}</span>
+                        </div>
+                      </div>
+
+                      {msg.topic && (
+                        <span className="px-2.5 py-1 text-xs font-semibold rounded-md" style={{ backgroundColor: 'var(--brand-bg)', color: 'var(--brand-text)' }}>
+                          {msg.topic}
+                        </span>
+                      )}
+                    </div>
+
+                    {renderStructuredAnswer(msg.text)}
+
+                    {msg.sources && msg.sources.length > 0 && (
+                      <div className="pt-3 flex items-center justify-between text-xs" style={{ borderTop: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--success-text)' }} />
+                          <span>Grounded using {msg.sources.length} textbook {msg.sources.length === 1 ? 'source' : 'sources'}</span>
+                        </span>
+                        <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>See citations on the right</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {loading && (
+              <div className="p-6 rounded-2xl flex items-center gap-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-sm)' }}>
+                <LoadingSpinner size="sm" />
+                <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                  Retrieving textbook context and formulating step-by-step explanation in {language}...
+                </span>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Pinned Bottom Input Bar */}
+          <div className="flex-shrink-0 p-4 rounded-2xl space-y-3 mt-2" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-md)' }}>
             <div className="relative">
               <textarea
                 value={question}
@@ -265,14 +328,16 @@ export const DoubtSolver: React.FC = () => {
                 }}
                 rows={2}
                 placeholder="Ask any question... (e.g. What is photosynthesis? Explain step by step)"
-                className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+                className="w-full pl-4 pr-12 py-3 rounded-xl text-sm placeholder-opacity-60 focus:outline-none focus:ring-2 transition-all resize-none"
+                style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }}
               />
               <button
                 type="button"
                 onClick={() => handleAsk()}
                 disabled={loading || !question.trim()}
-                className="absolute right-3 bottom-3.5 p-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white rounded-lg transition-colors cursor-pointer"
+                className="absolute right-3 bottom-3.5 p-2 text-white rounded-lg transition-colors cursor-pointer disabled:opacity-40"
                 title="Send Question"
+                style={{ backgroundColor: 'var(--brand-text)' }}
               >
                 <svg className="w-4 h-4 transform rotate-45 -mt-0.5 -mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -281,15 +346,16 @@ export const DoubtSolver: React.FC = () => {
             </div>
 
             {/* Quick suggested chips */}
-            <div className="flex items-center gap-2 overflow-x-auto text-[11px] text-slate-500 pt-1">
-              <span className="font-semibold text-slate-400">Suggestions:</span>
+            <div className="flex items-center gap-2 overflow-x-auto text-[11px] pt-1" style={{ color: 'var(--text-muted)' }}>
+              <span className="font-semibold" style={{ color: 'var(--text-muted)' }}>Suggestions:</span>
               <button
                 onClick={() => {
                   setQuestion('What is photosynthesis? Explain step by step.');
                   setSubject('Biology');
                   setTopic('Photosynthesis');
                 }}
-                className="px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 rounded-full transition-colors whitespace-nowrap"
+                className="px-2.5 py-1 rounded-full transition-colors whitespace-nowrap"
+                style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)' }}
               >
                 🌿 Photosynthesis
               </button>
@@ -299,7 +365,8 @@ export const DoubtSolver: React.FC = () => {
                   setSubject('Mathematics');
                   setTopic('Quadratic Equations');
                 }}
-                className="px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 rounded-full transition-colors whitespace-nowrap"
+                className="px-2.5 py-1 rounded-full transition-colors whitespace-nowrap"
+                style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)' }}
               >
                 📐 Quadratic Equations
               </button>
@@ -309,128 +376,59 @@ export const DoubtSolver: React.FC = () => {
                   setSubject('Physics');
                   setTopic('Laws of Motion');
                 }}
-                className="px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 rounded-full transition-colors whitespace-nowrap"
+                className="px-2.5 py-1 rounded-full transition-colors whitespace-nowrap"
+                style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)' }}
               >
                 ⚡ Newton's Laws
               </button>
             </div>
           </div>
-
-          {/* Error display */}
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl flex items-center justify-between">
-              <span>{error}</span>
-              <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600 font-bold">×</button>
-            </div>
-          )}
-
-          {/* Message Thread */}
-          <div className="space-y-6">
-            {messages.map((msg) => (
-              <div key={msg.id} className="space-y-2">
-                {msg.sender === 'user' ? (
-                  // User Question Box
-                  <div className="flex justify-end">
-                    <div className="max-w-2xl bg-blue-600 text-white p-4 rounded-2xl rounded-tr-xs shadow-xs text-sm">
-                      <p className="font-medium">{msg.text}</p>
-                      <span className="text-[10px] text-blue-200 block text-right mt-1">{msg.timestamp}</span>
-                    </div>
-                  </div>
-                ) : (
-                  // AI Answer Box (Structured)
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                          AI
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-bold text-slate-900">EduBridge AI Tutor</h3>
-                          <span className="text-[10px] text-slate-400">{msg.timestamp}</span>
-                        </div>
-                      </div>
-
-                      {msg.topic && (
-                        <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-md">
-                          {msg.topic}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Structured Answer Body */}
-                    {renderStructuredAnswer(msg.text)}
-
-                    {/* Bottom Citation Notice */}
-                    {msg.sources && msg.sources.length > 0 && (
-                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                          <span>Grounded using {msg.sources.length} textbook {msg.sources.length === 1 ? 'source' : 'sources'}</span>
-                        </span>
-                        <span className="text-slate-400 text-[11px]">See citations on the right</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {/* Loading Indicator when thinking */}
-            {loading && (
-              <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-3">
-                <LoadingSpinner size="sm" />
-                <span className="text-sm text-slate-600 font-medium">
-                  Retrieving textbook context and formulating step-by-step explanation in {language}...
-                </span>
-              </div>
-            )}
-          </div>
         </div>
 
-        {/* Right Column: Sources & Citations Panel (4 cols) */}
+        {/* Right Column: Sources & Citations Panel */}
         <div className="lg:col-span-4 space-y-5">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="p-5 rounded-2xl space-y-4" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-sm)' }}>
+            <div className="flex items-center gap-2 pb-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--brand-text)' }}>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
-              <h2 className="text-base font-bold text-slate-900 font-heading">
+              <h2 className="text-base font-bold font-heading" style={{ color: 'var(--text-primary)' }}>
                 Sources & Citations
               </h2>
             </div>
 
-            {/* Citation Cards */}
             <div className="space-y-3">
               {activeSources.map((source, idx) => {
                 const isPrimary = idx === 0;
                 return (
                   <div
                     key={idx}
-                    className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/70 hover:bg-slate-50 transition-colors space-y-1.5"
+                    className="p-3.5 rounded-xl transition-colors space-y-1.5"
+                    style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}
                   >
                     <div className="flex items-center justify-between">
                       <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                          isPrimary
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-indigo-100 text-indigo-800'
-                        }`}
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
+                        style={{
+                          backgroundColor: isPrimary ? 'var(--success-bg)' : 'var(--brand-bg)',
+                          color: isPrimary ? 'var(--success-text)' : 'var(--brand-text)',
+                        }}
                       >
                         {isPrimary ? 'Primary Source' : `Reference ${idx}`}
                       </span>
                       {source.relevance && (
-                        <span className="text-[11px] font-semibold text-slate-400">
+                        <span className="text-[11px] font-semibold" style={{ color: 'var(--text-muted)' }}>
                           {Math.round(source.relevance * 100)}% match
                         </span>
                       )}
                     </div>
 
-                    <h4 className="text-xs font-bold text-slate-800 leading-snug">
+                    <h4 className="text-xs font-bold leading-snug" style={{ color: 'var(--text-primary)' }}>
                       {source.title}
                     </h4>
 
                     {source.chapter && (
-                      <p className="text-[11px] text-slate-500">
+                      <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
                         {source.chapter}
                       </p>
                     )}
@@ -440,7 +438,8 @@ export const DoubtSolver: React.FC = () => {
                         href={source.source_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-800 pt-1"
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold pt-1"
+                        style={{ color: 'var(--brand-text)' }}
                       >
                         <span>View Source</span>
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -455,17 +454,18 @@ export const DoubtSolver: React.FC = () => {
           </div>
 
           {/* Feedback Card */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-700">Was this helpful?</span>
+          <div className="p-4 rounded-2xl flex items-center justify-between" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-sm)' }}>
+            <span className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Was this helpful?</span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setFeedbackGiven('up')}
-                className={`p-2 rounded-lg text-sm border transition-colors ${
-                  feedbackGiven === 'up'
-                    ? 'bg-emerald-50 border-emerald-300 text-emerald-600'
-                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                }`}
+                className="p-2 rounded-lg text-sm border transition-colors"
+                style={{
+                  backgroundColor: feedbackGiven === 'up' ? 'var(--success-bg)' : 'var(--bg-secondary)',
+                  borderColor: feedbackGiven === 'up' ? 'var(--success-border)' : 'var(--border-default)',
+                  color: feedbackGiven === 'up' ? 'var(--success-text)' : 'var(--text-secondary)',
+                }}
                 title="Helpful"
               >
                 👍
@@ -473,11 +473,12 @@ export const DoubtSolver: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setFeedbackGiven('down')}
-                className={`p-2 rounded-lg text-sm border transition-colors ${
-                  feedbackGiven === 'down'
-                    ? 'bg-red-50 border-red-300 text-red-600'
-                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                }`}
+                className="p-2 rounded-lg text-sm border transition-colors"
+                style={{
+                  backgroundColor: feedbackGiven === 'down' ? 'var(--danger-bg)' : 'var(--bg-secondary)',
+                  borderColor: feedbackGiven === 'down' ? 'var(--danger-border)' : 'var(--border-default)',
+                  color: feedbackGiven === 'down' ? 'var(--danger-text)' : 'var(--text-secondary)',
+                }}
                 title="Not helpful"
               >
                 👎
@@ -486,8 +487,8 @@ export const DoubtSolver: React.FC = () => {
           </div>
 
           {/* Related Topics */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+          <div className="p-5 rounded-2xl space-y-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-sm)' }}>
+            <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
               Explore Related Topics
             </h3>
             <ul className="space-y-2 text-xs">
@@ -497,9 +498,10 @@ export const DoubtSolver: React.FC = () => {
                     setQuestion('How does chlorophyll absorb sunlight?');
                     handleAsk('How does chlorophyll absorb sunlight?');
                   }}
-                  className="text-slate-600 hover:text-blue-600 flex items-center gap-1.5 transition-colors text-left"
+                  className="flex items-center gap-1.5 transition-colors text-left"
+                  style={{ color: 'var(--text-secondary)' }}
                 >
-                  <span className="text-blue-500">•</span>
+                  <span style={{ color: 'var(--brand-text)' }}>•</span>
                   <span>Chlorophyll & Light Absorption</span>
                 </button>
               </li>
@@ -509,9 +511,10 @@ export const DoubtSolver: React.FC = () => {
                     setQuestion('What is the role of stomata in plants?');
                     handleAsk('What is the role of stomata in plants?');
                   }}
-                  className="text-slate-600 hover:text-blue-600 flex items-center gap-1.5 transition-colors text-left"
+                  className="flex items-center gap-1.5 transition-colors text-left"
+                  style={{ color: 'var(--text-secondary)' }}
                 >
-                  <span className="text-blue-500">•</span>
+                  <span style={{ color: 'var(--brand-text)' }}>•</span>
                   <span>Stomata and Gas Exchange</span>
                 </button>
               </li>
@@ -521,9 +524,10 @@ export const DoubtSolver: React.FC = () => {
                     setQuestion('Difference between respiration and photosynthesis');
                     handleAsk('Difference between respiration and photosynthesis');
                   }}
-                  className="text-slate-600 hover:text-blue-600 flex items-center gap-1.5 transition-colors text-left"
+                  className="flex items-center gap-1.5 transition-colors text-left"
+                  style={{ color: 'var(--text-secondary)' }}
                 >
-                  <span className="text-blue-500">•</span>
+                  <span style={{ color: 'var(--brand-text)' }}>•</span>
                   <span>Respiration in Plants</span>
                 </button>
               </li>

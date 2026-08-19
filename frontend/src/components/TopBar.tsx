@@ -1,6 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { ThemeToggle } from './ThemeToggle';
 
 interface TopBarProps {
@@ -14,14 +12,10 @@ export const TopBar: React.FC<TopBarProps> = ({
   selectedLanguage,
   onLanguageChange,
 }) => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const profileRef = useRef<HTMLDivElement>(null);
   const langRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
@@ -37,9 +31,6 @@ export const TopBar: React.FC<TopBarProps> = ({
   // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
-        setProfileOpen(false);
-      }
       if (langRef.current && !langRef.current.contains(e.target as Node)) {
         setLangOpen(false);
       }
@@ -54,13 +45,8 @@ export const TopBar: React.FC<TopBarProps> = ({
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/dashboard/doubt-solver?q=${encodeURIComponent(searchQuery.trim())}`);
+      window.location.href = `/dashboard/doubt-solver?q=${encodeURIComponent(searchQuery.trim())}`;
     }
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
   };
 
   return (
@@ -202,63 +188,6 @@ export const TopBar: React.FC<TopBarProps> = ({
                   <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>You reached a 7-day learning streak!</p>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Profile Pill */}
-        <div className="relative" ref={profileRef}>
-          <button
-            type="button"
-            onClick={() => setProfileOpen(!profileOpen)}
-            className="flex items-center gap-2.5 p-1 sm:px-2 sm:py-1 rounded-full transition-colors"
-          >
-            <div
-              className="w-8 h-8 rounded-full text-white font-semibold text-xs flex items-center justify-center"
-              style={{
-                background: 'linear-gradient(135deg, var(--brand-text), #6366f1)',
-                boxShadow: 'var(--shadow-sm)',
-              }}
-            >
-              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-            </div>
-            <div className="hidden sm:flex flex-col text-left">
-              <span className="text-xs font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>
-                {user?.name || 'User'}
-              </span>
-              <span className="text-[10px] font-medium capitalize" style={{ color: 'var(--text-muted)' }}>
-                {user?.role || 'Student'}
-              </span>
-            </div>
-            <svg className="w-3.5 h-3.5 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-muted)' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          {profileOpen && (
-            <div
-              className="absolute right-0 mt-2 w-48 rounded-xl py-1.5 z-50 animate-dropdown-in"
-              style={{
-                backgroundColor: 'var(--bg-elevated)',
-                border: '1px solid var(--border-default)',
-                boxShadow: 'var(--shadow-lg)',
-              }}
-            >
-              <div className="px-3.5 py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{user?.name}</p>
-                <p className="text-[11px] truncate" style={{ color: 'var(--text-muted)' }}>{user?.email}</p>
-              </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-full text-left px-3.5 py-2 text-xs font-medium transition-colors flex items-center gap-2"
-                style={{ color: 'var(--danger-text)' }}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                Sign Out
-              </button>
             </div>
           )}
         </div>

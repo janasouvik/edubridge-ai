@@ -12,7 +12,7 @@ import { DoubtSolver } from './pages/dashboard/DoubtSolver';
 import { Practice } from './pages/dashboard/Practice';
 import { Progress } from './pages/dashboard/Progress';
 import { StudyMaterials } from './pages/dashboard/StudyMaterials';
-import { Scholarships } from './pages/dashboard/Scholarships';
+import { Contest } from './pages/dashboard/Contest';
 import { TeacherInsights } from './pages/dashboard/TeacherInsights';
 
 function App() {
@@ -38,7 +38,7 @@ function App() {
           <Route path="practice" element={<Practice />} />
           <Route path="progress" element={<Progress />} />
           <Route path="study-materials" element={<StudyMaterials />} />
-          <Route path="scholarships" element={<Scholarships />} />
+          <Route path="contest" element={<Contest />} />
           <Route
             path="teacher-insights"
             element={

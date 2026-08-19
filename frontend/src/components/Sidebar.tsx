@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Logo } from './Logo';
@@ -6,17 +6,37 @@ import { Logo } from './Logo';
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const { user } = useAuth();
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, collapsed, onToggleCollapse }) => {
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   const isTeacher = user?.role === 'teacher';
 
+  // Close profile menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   const navItems = [
     {
-      name: 'Home',
+      name: 'Dashboard',
       path: '/dashboard',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,6 +67,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       roles: ['student', 'admin'],
     },
     {
+      name: 'Contest',
+      path: '/dashboard/contest',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+        </svg>
+      ),
+      roles: ['student', 'admin'],
+    },
+    {
       name: 'My Progress',
       path: '/dashboard/progress',
       icon: (
@@ -62,17 +92,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-      ),
-      roles: ['student', 'admin'],
-    },
-    {
-      name: 'Scholarships',
-      path: '/dashboard/scholarships',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
         </svg>
       ),
       roles: ['student', 'admin'],
@@ -99,27 +118,35 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       {isOpen && (
         <div
           className="fixed inset-0 z-40 lg:hidden"
-          style={{ backgroundColor: 'rgba(12, 15, 20, 0.5)', backdropFilter: 'blur(4px)' }}
+          style={{ backgroundColor: 'rgba(9, 11, 16, 0.6)', backdropFilter: 'blur(4px)' }}
           onClick={onClose}
         />
       )}
 
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 border-r flex flex-col lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 border-r flex flex-col sidebar-transition lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        } ${collapsed ? 'w-20' : 'w-64'}`}
         style={{
           backgroundColor: 'var(--bg-surface)',
           borderColor: 'var(--border-default)',
-          transition: 'transform var(--duration-slow) var(--ease-smooth), background-color var(--duration-slow) var(--ease-smooth)',
         }}
       >
         {/* Header / Brand */}
         <div
-          className="p-6 flex items-center justify-between"
+          className={`flex items-center justify-between ${collapsed ? 'px-3 py-5' : 'p-6'}`}
           style={{ borderBottom: '1px solid var(--border-subtle)' }}
         >
-          <Logo size="md" showTagline={true} />
+          {!collapsed && <Logo size="md" showTagline={false} />}
+          {collapsed && (
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm mx-auto"
+              style={{ backgroundColor: 'var(--brand-text)', color: '#fff' }}
+            >
+              EB
+            </div>
+          )}
+          {/* Close button (mobile) */}
           <button
             type="button"
             onClick={onClose}
@@ -132,9 +159,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
+        {/* Collapse toggle (desktop only) */}
+        <div className="hidden lg:flex justify-end px-3 pt-3 pb-1">
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="p-1.5 rounded-lg transition-colors"
+            style={{ color: 'var(--text-muted)' }}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <svg className={`w-4 h-4 transition-transform ${collapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            </svg>
+          </button>
+        </div>
+
         {/* Primary Action: New Doubt */}
         {!isTeacher && (
-          <div className="px-5 pt-5 pb-2">
+          <div className={collapsed ? 'px-3 pt-3 pb-2' : 'px-5 pt-4 pb-2'}>
             <button
               onClick={() => {
                 navigate('/dashboard/doubt-solver');
@@ -146,17 +188,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 color: 'var(--text-on-brand)',
                 boxShadow: 'var(--shadow-brand)',
               }}
+              title={collapsed ? 'New Doubt' : undefined}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
               </svg>
-              <span>+ New Doubt</span>
+              {!collapsed && <span>New Doubt</span>}
             </button>
           </div>
         )}
 
         {/* Navigation items */}
-        <nav className="flex-1 px-4 py-3 space-y-1 overflow-y-auto">
+        <nav className={`flex-1 py-3 space-y-1 overflow-y-auto ${collapsed ? 'px-2' : 'px-4'}`}>
           {visibleNavItems.map((item, index) => (
             <NavLink
               key={item.path}
@@ -164,9 +207,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               end={item.end}
               onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl font-medium text-sm animate-slide-in-left stagger-${index + 1} ${
+                `flex items-center gap-3.5 rounded-xl font-medium text-sm animate-slide-in-left stagger-${index + 1} ${
                   isActive ? 'font-semibold' : ''
-                }`
+                } ${collapsed ? 'justify-center px-2 py-2.5' : 'px-3.5 py-2.5'}`
               }
               style={({ isActive }) => ({
                 backgroundColor: isActive ? 'var(--brand-bg)' : 'transparent',
@@ -174,6 +217,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 boxShadow: isActive ? 'var(--shadow-sm)' : 'none',
                 transition: 'background-color var(--duration-fast) var(--ease-smooth), color var(--duration-fast) var(--ease-smooth), box-shadow var(--duration-fast) var(--ease-smooth)',
               })}
+              title={collapsed ? item.name : undefined}
               onMouseEnter={(e) => {
                 const target = e.currentTarget;
                 if (!target.classList.contains('font-semibold')) {
@@ -190,15 +234,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               }}
             >
               {item.icon}
-              <span>{item.name}</span>
+              {!collapsed && <span>{item.name}</span>}
             </NavLink>
           ))}
         </nav>
 
-        {/* Learning Streak Widget (Students) */}
-        {!isTeacher && (
+        {/* Learning Streak Widget (Students, expanded only) */}
+        {!isTeacher && !collapsed && (
           <div
-            className="mx-4 mb-4 p-4 rounded-xl"
+            className="mx-4 mb-3 p-4 rounded-xl"
             style={{
               background: 'linear-gradient(135deg, var(--brand-bg), var(--bg-secondary))',
               border: '1px solid var(--brand-border)',
@@ -225,26 +269,88 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </div>
         )}
 
-        {/* Bottom Help & Support */}
-        <div className="p-4" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-          <button
-            onClick={() => alert('Need help? Contact support at support@edubridge.ai')}
-            className="flex items-center gap-2.5 text-xs font-medium w-full px-2 py-1.5 rounded-lg transition-colors"
-            style={{ color: 'var(--text-muted)' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
-              e.currentTarget.style.color = 'var(--text-primary)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = 'var(--text-muted)';
-            }}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-muted)' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>Help & Support</span>
-          </button>
+        {/* Bottom: Profile Section (docked) */}
+        <div
+          className={`${collapsed ? 'p-2' : 'p-4'}`}
+          style={{ borderTop: '1px solid var(--border-subtle)' }}
+          ref={profileRef}
+        >
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+              className={`w-full flex items-center gap-3 rounded-xl transition-colors ${
+                collapsed ? 'justify-center p-2' : 'px-3 py-2.5'
+              }`}
+              style={{ color: 'var(--text-secondary)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              <div
+                className="w-8 h-8 rounded-full text-white font-semibold text-xs flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: 'linear-gradient(135deg, var(--brand-text), #6366f1)',
+                  boxShadow: 'var(--shadow-sm)',
+                }}
+              >
+                {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              </div>
+              {!collapsed && (
+                <>
+                  <div className="flex-1 text-left min-w-0">
+                    <div className="text-xs font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                      {user?.name || 'User'}
+                    </div>
+                    <div className="text-[10px] font-medium capitalize truncate" style={{ color: 'var(--text-muted)' }}>
+                      {user?.role || 'Student'}
+                    </div>
+                  </div>
+                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-muted)' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+                  </svg>
+                </>
+              )}
+            </button>
+
+            {/* Profile dropdown (opens upward) */}
+            {profileMenuOpen && (
+              <div
+                className="absolute bottom-full left-0 mb-2 w-48 rounded-xl py-1.5 z-50 animate-dropdown-in"
+                style={{
+                  backgroundColor: 'var(--bg-elevated)',
+                  border: '1px solid var(--border-default)',
+                  boxShadow: 'var(--shadow-lg)',
+                  transformOrigin: 'bottom center',
+                }}
+              >
+                <div className="px-3.5 py-2" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                  <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{user?.name}</p>
+                  <p className="text-[11px] truncate" style={{ color: 'var(--text-muted)' }}>{user?.email}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full text-left px-3.5 py-2 text-xs font-medium transition-colors flex items-center gap-2"
+                  style={{ color: 'var(--danger-text)' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'var(--danger-bg)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </aside>
     </>

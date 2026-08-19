@@ -1,19 +1,20 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   EduBridge AI — Design System (Impeccable Methodology)
+   EduBridge AI — Design System (Round 2 Overhaul)
    
    Principles:
    - Never pure black/gray — all neutrals are color-tinted
    - Warm-tinted (light), blue-tinted (dark)
    - Smooth cubic-bezier easing only (no bounce/elastic)
    - Respects prefers-reduced-motion
+   - Premium typography: Inter (body) + Plus Jakarta Sans (headings)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @theme {
-  /* Typography — Outfit (body) + DM Sans (headings) per Impeccable guidance */
-  --font-sans: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-heading: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Typography — Inter (body) + Plus Jakarta Sans (headings) */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   /* Brand palette — slightly warmer than stock Tailwind blue */
   --color-brand-50:  #eef4ff;
@@ -111,27 +112,27 @@
   color-scheme: light;
 }
 
-/* ─── Dark Theme (blue-tinted) ─────────────────────────────────────────── */
+/* ─── Dark Theme (premium blue-tinted — dashboard default) ─────────────── */
 [data-theme="dark"] {
-  --bg-primary:     #0c0f14;
-  --bg-secondary:   #141821;
-  --bg-surface:     #1a1f2e;
-  --bg-elevated:    #222838;
-  --bg-inset:       #111520;
+  --bg-primary:     #090b10;
+  --bg-secondary:   #10141e;
+  --bg-surface:     #161b28;
+  --bg-elevated:    #1e2436;
+  --bg-inset:       #0d1018;
 
   --text-primary:   #e8eaf0;
   --text-secondary: #9ba3b5;
   --text-muted:     #6b7389;
   --text-on-brand:  #ffffff;
 
-  --border-default: #2a3042;
-  --border-subtle:  #1e2333;
-  --border-strong:  #3a4258;
+  --border-default: #232a3c;
+  --border-subtle:  #1a2030;
+  --border-strong:  #333d55;
 
   --brand-text:     #6196fc;
-  --brand-bg:       rgba(79, 125, 243, 0.12);
-  --brand-border:   rgba(79, 125, 243, 0.25);
-  --brand-glow:     rgba(79, 125, 243, 0.2);
+  --brand-bg:       rgba(79, 125, 243, 0.1);
+  --brand-border:   rgba(79, 125, 243, 0.2);
+  --brand-glow:     rgba(79, 125, 243, 0.18);
 
   --success-text:   #6ee7a8;
   --success-bg:     rgba(16, 185, 129, 0.1);
@@ -173,10 +174,18 @@
                 color var(--duration-slow) var(--ease-smooth);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    line-height: 1.7;
+    max-width: 72ch;
   }
 
   /* Theme-aware selection */
@@ -234,6 +243,11 @@
 @keyframes spinSmooth {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: var(--border-default); }
+  50%      { border-color: var(--brand-border); }
 }
 
 /* ─── Animation utility classes ───────────────────────────────────────── */
@@ -315,11 +329,25 @@
 /* ─── Theme-aware interactive states ──────────────────────────────────── */
 .hover-lift {
   transition: transform var(--duration-normal) var(--ease-smooth),
-              box-shadow var(--duration-normal) var(--ease-smooth);
+              box-shadow var(--duration-normal) var(--ease-smooth),
+              border-color var(--duration-normal) var(--ease-smooth);
 }
 .hover-lift:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px) scale(1.01);
   box-shadow: var(--shadow-md);
+  border-color: var(--brand-border);
+}
+
+/* Premium card hover — subtle glow + lift */
+.card-hover {
+  transition: transform var(--duration-normal) var(--ease-smooth),
+              box-shadow var(--duration-slow) var(--ease-smooth),
+              border-color var(--duration-slow) var(--ease-smooth);
+}
+.card-hover:hover {
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: 0 8px 30px rgba(79, 125, 243, 0.12), var(--shadow-md);
+  border-color: var(--brand-border);
 }
 
 .focus-ring:focus-visible {
@@ -332,4 +360,36 @@
   background-color: color-mix(in srgb, var(--bg-surface) 80%, transparent);
   backdrop-filter: blur(12px) saturate(1.2);
   -webkit-backdrop-filter: blur(12px) saturate(1.2);
+}
+
+/* ─── Landing page gradient background ────────────────────────────────── */
+.landing-gradient {
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #f0f7ff 25%,
+    #e0efff 50%,
+    #d4e8ff 75%,
+    #c8e0ff 100%
+  );
+}
+
+/* Dark theme landing uses the dark bg instead */
+[data-theme="dark"] .landing-gradient {
+  background: linear-gradient(
+    180deg,
+    var(--bg-primary) 0%,
+    var(--bg-secondary) 50%,
+    var(--bg-primary) 100%
+  );
+}
+
+/* ─── Sidebar transition utilities ────────────────────────────────────── */
+.sidebar-transition {
+  transition: width var(--duration-slow) var(--ease-smooth),
+              padding var(--duration-slow) var(--ease-smooth);
+}
+
+.main-transition {
+  transition: padding-left var(--duration-slow) var(--ease-smooth);
 }
