@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { practiceApi } from '../../api/practice';
-import type { PracticeQuestion } from '../../types';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 const ArrowIcon = () => (
@@ -36,38 +35,11 @@ const InsightIcon = () => (
   </svg>
 );
 
-const difficultyStyles: Record<PracticeQuestion['difficulty'], { bg: string; text: string; border: string }> = {
-  easy: { bg: 'var(--success-bg)', text: 'var(--success-text)', border: 'var(--success-border)' },
-  medium: { bg: 'var(--warning-bg)', text: 'var(--warning-text)', border: 'var(--warning-border)' },
-  hard: { bg: 'var(--danger-bg)', text: 'var(--danger-text)', border: 'var(--danger-border)' },
-};
-
 export const DashboardHome: React.FC = () => {
   const { user } = useAuth();
   const isTeacher = user?.role === 'teacher';
 
-  const [nextQuestion, setNextQuestion] = useState<PracticeQuestion | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadOverview = async () => {
-      if (isTeacher) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const qRes = await practiceApi.getNextQuestion();
-        setNextQuestion(qRes);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadOverview();
-  }, [isTeacher]);
 
   const firstName = useMemo(() => user?.name?.split(' ')[0] || 'Learner', [user?.name]);
 
@@ -354,91 +326,28 @@ export const DashboardHome: React.FC = () => {
         >
           <div className="flex flex-col gap-3 pb-5 sm:flex-row sm:items-center sm:justify-between" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>Practice Queue</p>
-              <h2 className="mt-1 text-xl font-extrabold" style={{ color: 'var(--text-primary)' }}>Next recommended question</h2>
+              <p className="text-xs font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)' }}>Adaptive Practice</p>
+              <h2 className="mt-1 text-xl font-extrabold" style={{ color: 'var(--text-primary)' }}>Master new subjects</h2>
             </div>
+          </div>
+
+          <div
+            className="flex min-h-56 flex-col items-center justify-center rounded-2xl px-4 py-8 text-center mt-5"
+            style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}
+          >
+            <h3 className="text-base font-extrabold" style={{ color: 'var(--text-primary)' }}>Start a new 5-question sprint</h3>
+            <p className="mt-2 max-w-sm text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
+              Choose a subject and get 5 tailored MCQs with a 15-second timer.
+            </p>
             <Link
               to="/dashboard/practice"
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-colors"
-              style={{
-                border: '1px solid var(--border-default)',
-                color: 'var(--text-secondary)',
-              }}
+              className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-white transition-colors"
+              style={{ backgroundColor: 'var(--brand-text)' }}
             >
-              Go to practice
+              Start Practice Session
               <ArrowIcon />
             </Link>
           </div>
-
-          {loading ? (
-            <div className="flex min-h-56 items-center justify-center">
-              <LoadingSpinner size="sm" text="Loading practice question..." />
-            </div>
-          ) : nextQuestion ? (
-            <div className="pt-5">
-              <div className="flex flex-wrap gap-2">
-                <span
-                  className="rounded-full px-3 py-1 text-xs font-bold uppercase"
-                  style={{ backgroundColor: 'var(--brand-bg)', color: 'var(--brand-text)', border: `1px solid var(--brand-border)` }}
-                >
-                  {nextQuestion.subject}
-                </span>
-                <span
-                  className="rounded-full px-3 py-1 text-xs font-bold"
-                  style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
-                >
-                  {nextQuestion.topic}
-                </span>
-                <span
-                  className="rounded-full px-3 py-1 text-xs font-bold uppercase"
-                  style={{
-                    backgroundColor: difficultyStyles[nextQuestion.difficulty].bg,
-                    color: difficultyStyles[nextQuestion.difficulty].text,
-                    border: `1px solid ${difficultyStyles[nextQuestion.difficulty].border}`,
-                  }}
-                >
-                  {nextQuestion.difficulty}
-                </span>
-              </div>
-
-              <div
-                className="mt-5 rounded-2xl p-4 sm:p-5"
-                style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}
-              >
-                <p className="text-base font-semibold leading-7" style={{ color: 'var(--text-primary)' }}>{nextQuestion.question}</p>
-              </div>
-
-              <Link
-                to="/dashboard/practice"
-                className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 focus:outline-none focus-ring"
-                style={{
-                  backgroundColor: 'var(--brand-text)',
-                  boxShadow: 'var(--shadow-brand)',
-                }}
-              >
-                Answer this question
-                <ArrowIcon />
-              </Link>
-            </div>
-          ) : (
-            <div
-              className="flex min-h-56 flex-col items-center justify-center rounded-2xl px-4 py-8 text-center"
-              style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}
-            >
-              <h3 className="text-base font-extrabold" style={{ color: 'var(--text-primary)' }}>No pending questions</h3>
-              <p className="mt-2 max-w-sm text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
-                Generate a fresh adaptive question when you are ready for another round.
-              </p>
-              <Link
-                to="/dashboard/practice"
-                className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold text-white transition-colors"
-                style={{ backgroundColor: 'var(--brand-text)' }}
-              >
-                Generate Question
-                <ArrowIcon />
-              </Link>
-            </div>
-          )}
         </div>
       </section>
     </div>

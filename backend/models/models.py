@@ -280,3 +280,45 @@ class StudentRating(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     student = relationship("Student")
+
+
+# --------------------------------------------------------------------------- #
+# PracticeSession
+# --------------------------------------------------------------------------- #
+
+class PracticeSession(Base):
+    __tablename__ = "practice_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    subject = Column(String(255), nullable=False)
+    score = Column(Integer, nullable=False, default=0)
+    completed = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    student = relationship("Student")
+    questions = relationship("PracticeMCQ", back_populates="session", order_by="PracticeMCQ.position")
+
+
+# --------------------------------------------------------------------------- #
+# PracticeMCQ
+# --------------------------------------------------------------------------- #
+
+class PracticeMCQ(Base):
+    __tablename__ = "practice_mcqs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("practice_sessions.id", ondelete="CASCADE"), nullable=False)
+    position = Column(Integer, nullable=False, default=0)
+    question_text = Column(Text, nullable=False)
+    option_a = Column(Text, nullable=False)
+    option_b = Column(Text, nullable=False)
+    option_c = Column(Text, nullable=False)
+    option_d = Column(Text, nullable=False)
+    correct_option = Column(String(1), nullable=False)  # 'A', 'B', 'C', or 'D'
+    explanation = Column(Text, nullable=True)
+    
+    # Store student answer for this MCQ
+    student_answer = Column(String(1), nullable=True)
+
+    session = relationship("PracticeSession", back_populates="questions")

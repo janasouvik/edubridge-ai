@@ -1,207 +1,172 @@
 """
 Adaptive Practice Service.
 
-Generates questions targeting the student's weakest topic and
-adjusts difficulty based on recent performance.
+Generates subject-wise MCQ questions targeting the student's grade
+using Wikipedia for grounding.
 """
-from datetime import datetime, timedelta
+import json
+import re
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from fastapi import HTTPException
 
 from ai.llm import generate_text
-from models.models import Student, Question, Attempt, LearningGap, SeverityEnum, DifficultyEnum
+from ai.web_search import _search_wikipedia, _get_wikipedia_extract
+from models.models import Student, PracticeSession, PracticeMCQ
 
 
-# ------------------------------------------------------------------ #
-# Difficulty determination
-# ------------------------------------------------------------------ #
-
-def _calculate_recent_accuracy(student: Student, db: Session, days: int = 7) -> float:
-    """Returns accuracy (0.0–1.0) over the last `days` days."""
-    since = datetime.utcnow() - timedelta(days=days)
-    recent_attempts = (
-        db.query(Attempt)
-        .filter(Attempt.student_id == student.id, Attempt.created_at >= since)
-        .all()
-    )
-    if not recent_attempts:
-        return 0.5  # assume medium difficulty for new students
-    correct = sum(1 for a in recent_attempts if a.is_correct)
-    return correct / len(recent_attempts)
-
-
-def _determine_difficulty(accuracy: float) -> DifficultyEnum:
-    """Simple adaptive difficulty rule from PRD."""
-    if accuracy < 0.40:
-        return DifficultyEnum.easy
-    elif accuracy <= 0.70:
-        return DifficultyEnum.medium
-    else:
-        return DifficultyEnum.hard
-
-
-def _get_worst_gap(student: Student, db: Session) -> LearningGap | None:
-    """Return the learning gap with the lowest confidence score."""
-    return (
-        db.query(LearningGap)
-        .filter(LearningGap.student_id == student.id)
-        .order_by(LearningGap.confidence_score.asc())
-        .first()
-    )
-
-
-# ------------------------------------------------------------------ #
-# Question generation
-# ------------------------------------------------------------------ #
-
-def generate_next_question(student: Student, db: Session) -> dict:
+def generate_practice_session(subject: str, level: str, student: Student, db: Session) -> dict:
     """
-    Generate the next adaptive practice question for this student.
-    Returns the stored Question as a dict.
+    Generate a new practice session with 5 MCQs based on the subject and student's grade/level.
     """
-    # 1. Identify worst learning gap
-    gap = _get_worst_gap(student, db)
-    if gap:
-        topic = gap.topic
-        subject = "General"  # could be enhanced by linking topics to subjects
+    grade = student.grade or "10"
+    
+    if level == "higher_ed":
+        target_audience = "Undergraduate / Postgraduate university student"
     else:
-        topic = "Basic Concepts"
-        subject = "General"
+        target_audience = f"student in Grade: '{grade}'"
+        
+    # 1. Ask Gemini to pick a relevant Wikipedia topic
+    topic_prompt = f"""You are an educational AI. Suggest a single, specific Wikipedia article title 
+that is highly relevant for a {target_audience} wanting to practice '{subject}'.
+Respond ONLY with the exact Wikipedia title string, and nothing else."""
+    
+    suggested_topic = generate_text(topic_prompt).strip()
+    suggested_topic = re.sub(r'["\']', '', suggested_topic)
+    
+    # 2. Search Wikipedia
+    search_results = _search_wikipedia(suggested_topic)
+    if not search_results:
+        search_results = _search_wikipedia(subject)
+    
+    title = search_results[0]
+    wiki_data = _get_wikipedia_extract(title)
+    if not wiki_data or not wiki_data.get("extract"):
+        raise ValueError(f"Failed to fetch extract for {title}")
+    
+    extract = wiki_data["extract"][:20000]
 
-    # 2. Determine difficulty based on recent accuracy
-    accuracy = _calculate_recent_accuracy(student, db)
-    difficulty = _determine_difficulty(accuracy)
+    # 3. Generate exactly 5 tailored questions
+    prompt = f"""You are an expert educator. Based on the following text, generate exactly 5 distinct Multiple Choice Questions.
+The difficulty, terminology, and concepts MUST be tailored specifically for a {target_audience} studying '{subject}'.
+Format the output STRICTLY as a raw JSON array of objects, with NO Markdown wrapping (no ```json).
+Each object must have exactly these keys:
+"question_text" (string)
+"option_a" (string)
+"option_b" (string)
+"option_c" (string)
+"option_d" (string)
+"correct_option" (string - MUST be exactly "A", "B", "C", or "D")
+"explanation" (string)
 
-    # 3. Generate question via LLM
-    prompt = f"""Generate ONE educational practice question for an Indian school student.
+Text:
+{extract}
+"""
+    raw_response = generate_text(prompt)
+    
+    cleaned = re.sub(r'^```(?:json)?\s*', '', raw_response.strip(), flags=re.IGNORECASE)
+    cleaned = re.sub(r'\s*```$', '', cleaned)
+    
+    try:
+        questions = json.loads(cleaned)
+    except Exception as e:
+        raise ValueError(f"Failed to parse JSON: {str(e)}\nRaw: {raw_response[:500]}")
 
-Subject: {subject}
-Topic: {topic}
-Difficulty: {difficulty.value}
-Student's preferred language: {student.preferred_language}
-
-Requirements:
-- Ask a clear, objective question (preferably short answer or MCQ).
-- Provide the CORRECT ANSWER clearly labeled "Answer:".
-- Provide a brief EXPLANATION labeled "Explanation:".
-- Keep it suitable for grade {student.grade or 'school'} students.
-
-Format strictly as:
-Question: <question text here>
-Answer: <correct answer here>
-Explanation: <explanation here>"""
-
-    raw = generate_text(prompt)
-
-    # Parse LLM response
-    question_text = ""
-    correct_answer = ""
-    explanation = ""
-
-    for line in raw.splitlines():
-        line = line.strip()
-        if line.lower().startswith("question:"):
-            question_text = line[len("question:"):].strip()
-        elif line.lower().startswith("answer:"):
-            correct_answer = line[len("answer:"):].strip()
-        elif line.lower().startswith("explanation:"):
-            explanation = line[len("explanation:"):].strip()
-
-    # Fallback if parsing fails
-    if not question_text:
-        question_text = raw
-    if not correct_answer:
-        correct_answer = "See explanation"
-
-    # 4. Save question to DB
-    question = Question(
+    if len(questions) != 5:
+        # Pad or slice to exactly 5
+        questions = questions[:5]
+        
+    # 4. Save to DB
+    session = PracticeSession(
+        student_id=student.id,
         subject=subject,
-        topic=topic,
-        difficulty=difficulty,
-        question_text=question_text,
-        correct_answer=correct_answer,
-        explanation=explanation,
     )
-    db.add(question)
+    db.add(session)
+    db.flush()
+    
+    db_questions = []
+    for i, q in enumerate(questions):
+        mcq = PracticeMCQ(
+            session_id=session.id,
+            position=i + 1,
+            question_text=q["question_text"],
+            option_a=q["option_a"],
+            option_b=q["option_b"],
+            option_c=q["option_c"],
+            option_d=q["option_d"],
+            correct_option=q["correct_option"],
+            explanation=q["explanation"],
+        )
+        db.add(mcq)
+        db_questions.append(mcq)
+        
     db.commit()
-    db.refresh(question)
-
+    db.refresh(session)
+    
     return {
-        "question_id": question.id,
-        "subject": question.subject,
-        "topic": question.topic,
-        "difficulty": question.difficulty.value,
-        "question": question.question_text,
+        "session_id": session.id,
+        "subject": session.subject,
+        "questions": [
+            {
+                "id": q.id,
+                "position": q.position,
+                "question_text": q.question_text,
+                "option_a": q.option_a,
+                "option_b": q.option_b,
+                "option_c": q.option_c,
+                "option_d": q.option_d,
+            }
+            for q in db_questions
+        ]
     }
 
 
-# ------------------------------------------------------------------ #
-# Answer submission & learning gap update
-# ------------------------------------------------------------------ #
-
-def _normalize(text: str) -> str:
-    return text.strip().lower()
-
-
-def submit_answer(student: Student, question_id: int, answer: str, db: Session) -> dict:
+def submit_practice_session(session_id: int, answers: dict[int, str], student: Student, db: Session) -> dict:
     """
-    Evaluate the student's answer, store the attempt, update learning gap.
+    Evaluate the student's answers for the session and return results.
+    answers: {question_id: "A"|"B"|"C"|"D"}
     """
-    question = db.query(Question).filter(Question.id == question_id).first()
-    if not question:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail="Question not found")
+    session = db.query(PracticeSession).filter(
+        PracticeSession.id == session_id,
+        PracticeSession.student_id == student.id
+    ).first()
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Practice session not found")
+        
+    if session.completed:
+        raise HTTPException(status_code=400, detail="Session already completed")
 
-    # Simple exact/normalized comparison
-    is_correct = _normalize(answer) == _normalize(question.correct_answer)
-
-    # Store attempt
-    attempt = Attempt(
-        student_id=student.id,
-        question_id=question_id,
-        answer=answer,
-        is_correct=is_correct,
-    )
-    db.add(attempt)
-
-    # Update or create learning gap for this topic
-    gap = (
-        db.query(LearningGap)
-        .filter(
-            LearningGap.student_id == student.id,
-            LearningGap.topic == question.topic,
-        )
-        .first()
-    )
-
-    if gap:
-        # Update confidence: correct → +0.1, wrong → −0.15, clamp 0–1
-        delta = 0.10 if is_correct else -0.15
-        gap.confidence_score = max(0.0, min(1.0, gap.confidence_score + delta))
-    else:
-        gap = LearningGap(
-            student_id=student.id,
-            topic=question.topic,
-            confidence_score=0.6 if is_correct else 0.35,
-        )
-        db.add(gap)
-
-    db.flush()
-
-    # Update severity based on new confidence score
-    if gap.confidence_score < 0.4:
-        gap.severity = SeverityEnum.high
-    elif gap.confidence_score < 0.7:
-        gap.severity = SeverityEnum.medium
-    else:
-        gap.severity = SeverityEnum.low
-
+    questions = db.query(PracticeMCQ).filter(PracticeMCQ.session_id == session.id).order_by(PracticeMCQ.position).all()
+    
+    score = 0
+    detailed_results = []
+    
+    for q in questions:
+        student_ans = answers.get(q.id) or answers.get(str(q.id))
+        is_correct = student_ans == q.correct_option
+        
+        if is_correct:
+            score += 1
+            
+        q.student_answer = student_ans
+        
+        detailed_results.append({
+            "question_id": q.id,
+            "position": q.position,
+            "question_text": q.question_text,
+            "is_correct": is_correct,
+            "student_answer": student_ans,
+            "correct_option": q.correct_option,
+            "explanation": q.explanation,
+        })
+        
+    session.score = score
+    session.completed = True
     db.commit()
-
+    
     return {
-        "correct": is_correct,
-        "correct_answer": question.correct_answer,
-        "explanation": question.explanation or "No explanation available.",
-        "topic": question.topic,
-        "updated_confidence": round(gap.confidence_score, 4),
+        "session_id": session.id,
+        "score": score,
+        "total": len(questions),
+        "detailed_results": detailed_results
     }

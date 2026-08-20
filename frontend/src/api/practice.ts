@@ -1,10 +1,12 @@
 import { api } from './client';
-import type { PracticeQuestion, PracticeResult, SubmitAnswerRequest } from '../types';
+import type { PracticeSession, PracticeSubmitResult } from '../types';
 
 export const practiceApi = {
-  getNextQuestion: () =>
-    api.get<PracticeQuestion>('/api/v1/practice/next'),
-
-  submitAnswer: (data: SubmitAnswerRequest) =>
-    api.post<PracticeResult>('/api/v1/practice/submit', data),
+  generateSession: async (subject: string, level: string = "school"): Promise<PracticeSession> => {
+    return await api.post<PracticeSession>('/api/v1/practice/generate', { subject, level });
+  },
+  
+  submitSession: async (sessionId: number, answers: Record<number, string>): Promise<PracticeSubmitResult> => {
+    return await api.post<PracticeSubmitResult>(`/api/v1/practice/${sessionId}/submit`, { answers });
+  },
 };

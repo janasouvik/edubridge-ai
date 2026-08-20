@@ -51,25 +51,35 @@ export interface DoubtResponse {
 }
 
 // ─── Practice ───────────────────────────────────────────────────
-export interface PracticeQuestion {
-  question_id: number;
+export interface PracticeMCQ {
+  id: number;
+  position: number;
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+}
+
+export interface PracticeSession {
+  session_id: number;
   subject: string;
-  topic: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  question: string;
+  questions: PracticeMCQ[];
 }
 
-export interface SubmitAnswerRequest {
-  question_id: number;
-  answer: string;
-}
-
-export interface PracticeResult {
-  correct: boolean;
-  correct_answer: string;
-  explanation: string;
-  topic: string;
-  updated_confidence: number;
+export interface PracticeSubmitResult {
+  session_id: number;
+  score: number;
+  total: number;
+  detailed_results: {
+    question_id: number;
+    position: number;
+    question_text: string;
+    is_correct: boolean;
+    student_answer: string;
+    correct_option: string;
+    explanation: string;
+  }[];
 }
 
 // ─── Teacher Insights ───────────────────────────────────────────
