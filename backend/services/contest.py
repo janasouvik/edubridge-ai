@@ -116,12 +116,10 @@ def get_contest_detail(db: Session, contest_id: int) -> dict:
             "id": q.id,
             "position": q.position,
             "question_text": q.question_text,
-            "options": {
-                "A": q.option_a,
-                "B": q.option_b,
-                "C": q.option_c,
-                "D": q.option_d,
-            },
+            "option_a": q.option_a,
+            "option_b": q.option_b,
+            "option_c": q.option_c,
+            "option_d": q.option_d,
             # correct_option and explanation are intentionally omitted
         })
 
@@ -221,7 +219,7 @@ def submit_contest(
         "percentage": round(correct / total * 100, 1) if total else 0,
         "rating_change": delta,
         "new_rating": rating.current_rating,
-        "review": review,
+        "detailed_results": review,
     }
 
 

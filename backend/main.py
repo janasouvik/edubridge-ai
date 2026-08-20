@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from db.db import engine, Base
 import models.models
 from core.config import settings
-from routes import auth, doubts, practice, teacher, scholarships, contests
+from routes import auth, doubts, practice, teacher, scholarships, contests, materials
 
 # Auto-create missing database tables
 Base.metadata.create_all(bind=engine)
@@ -37,6 +37,7 @@ app.include_router(practice.router)
 app.include_router(teacher.router)
 app.include_router(scholarships.router)
 app.include_router(contests.router)
+app.include_router(materials.router)
 
 
 # ------------------------------------------------------------------ #
