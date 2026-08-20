@@ -23,11 +23,29 @@ export const Landing: React.FC = () => {
       {/* ─── Sticky Header ────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 glass border-b" style={{ borderColor: 'var(--border-default)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <Link to="/" className="flex items-center">
+          <Link
+            to="/"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="flex items-center"
+            title="EduBridge AI - Home"
+          >
             <Logo size="md" showTagline={true} />
           </Link>
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+            <a
+              href="#home"
+              onClick={(e) => {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="hover:opacity-80 transition-opacity"
+            >
+              Home
+            </a>
             <a href="#features" className="hover:opacity-80 transition-opacity">Features</a>
             <a href="#demo" className="hover:opacity-80 transition-opacity">Interactive Demo</a>
             <a href="#impact" className="hover:opacity-80 transition-opacity">Our Impact</a>
@@ -77,7 +95,7 @@ export const Landing: React.FC = () => {
       </header>
 
       {/* ─── Hero Section ─────────────────────────────────────────────── */}
-      <section className="relative pt-12 pb-20 lg:pt-20 lg:pb-28 overflow-hidden">
+      <section id="home" className="relative pt-12 pb-20 lg:pt-20 lg:pb-28 overflow-hidden">
         {/* Background Glows */}
         <div
           className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] blur-3xl rounded-full pointer-events-none -z-10"
@@ -524,7 +542,17 @@ export const Landing: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10" style={{ borderBottom: '1px solid var(--border-default)' }}>
             <div className="space-y-3 md:col-span-2">
-              <Logo size="md" showTagline={true} taglineText="Connecting Learners. Building Futures." />
+              <Link
+                to="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="inline-block"
+                title="EduBridge AI - Home"
+              >
+                <Logo size="md" showTagline={true} taglineText="Connecting Learners. Building Futures." />
+              </Link>
               <p className="text-xs max-w-sm" style={{ color: 'var(--text-muted)' }}>
                 EduBridge AI improves educational equity with grounded, multilingual AI tutoring and personalized practice.
               </p>

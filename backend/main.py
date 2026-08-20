@@ -1,8 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from db.db import engine, Base
+import models.models
 from core.config import settings
 from routes import auth, doubts, practice, teacher, scholarships, contests
+
+# Auto-create missing database tables
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="EduBridge AI Backend",

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
+import { DoubtSolverProvider } from '../contexts/DoubtSolverContext';
 
 const SIDEBAR_COLLAPSED_KEY = 'edubridge-sidebar-collapsed';
 
@@ -44,7 +45,9 @@ export const DashboardLayout: React.FC = () => {
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto animate-fade-in">
-          <Outlet context={{ selectedLanguage, setSelectedLanguage }} />
+          <DoubtSolverProvider>
+            <Outlet context={{ selectedLanguage, setSelectedLanguage }} />
+          </DoubtSolverProvider>
         </main>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Logo } from './Logo';
 
@@ -97,6 +97,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, collapsed, on
       roles: ['student', 'admin'],
     },
     {
+      name: 'Scholarships',
+      path: '/dashboard/scholarships',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.26 10.147a60.438 60.438 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.636 50.636 0 00-2.658-.813A59.906 59.906 0 0112 3.493a59.903 59.903 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
+        </svg>
+      ),
+      roles: ['student', 'admin'],
+    },
+    {
       name: 'Teacher Insights',
       path: '/dashboard/teacher-insights',
       icon: (
@@ -137,14 +147,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, collapsed, on
           className={`flex items-center justify-between ${collapsed ? 'px-3 py-5' : 'p-6'}`}
           style={{ borderBottom: '1px solid var(--border-subtle)' }}
         >
-          {!collapsed && <Logo size="md" showTagline={false} />}
+          {!collapsed && (
+            <Link to="/" className="flex items-center hover:opacity-90 transition-opacity" title="EduBridge AI - Home">
+              <Logo size="md" showTagline={false} />
+            </Link>
+          )}
           {collapsed && (
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm mx-auto"
+            <Link
+              to="/"
+              className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm mx-auto hover:opacity-90 transition-opacity cursor-pointer"
               style={{ backgroundColor: 'var(--brand-text)', color: '#fff' }}
+              title="EduBridge AI - Home"
             >
               EB
-            </div>
+            </Link>
           )}
           {/* Close button (mobile) */}
           <button
@@ -238,36 +254,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, collapsed, on
             </NavLink>
           ))}
         </nav>
-
-        {/* Learning Streak Widget (Students, expanded only) */}
-        {!isTeacher && !collapsed && (
-          <div
-            className="mx-4 mb-3 p-4 rounded-xl"
-            style={{
-              background: 'linear-gradient(135deg, var(--brand-bg), var(--bg-secondary))',
-              border: '1px solid var(--brand-border)',
-            }}
-          >
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-semibold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-                Learning Streak <span className="text-amber-500">🔥</span>
-              </span>
-            </div>
-            <div className="text-xl font-extrabold font-heading" style={{ color: 'var(--brand-text)' }}>
-              7 days
-            </div>
-            <div className="text-[11px] mb-2" style={{ color: 'var(--text-muted)' }}>Keep it up!</div>
-            <div
-              className="w-full rounded-full h-1.5 overflow-hidden"
-              style={{ backgroundColor: 'var(--border-default)' }}
-            >
-              <div
-                className="h-full rounded-full w-4/5 animate-progress-fill"
-                style={{ backgroundColor: 'var(--brand-text)' }}
-              />
-            </div>
-          </div>
-        )}
 
         {/* Bottom: Profile Section (docked) */}
         <div

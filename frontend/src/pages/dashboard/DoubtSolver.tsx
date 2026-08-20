@@ -1,21 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useOutletContext } from 'react-router-dom';
 import { doubtsApi } from '../../api/doubts';
-import type { DoubtResponse, Source } from '../../types';
+import type { DoubtResponse } from '../../types';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { useDoubtSolver } from '../../contexts/DoubtSolverContext';
+import type { Message } from '../../contexts/DoubtSolverContext';
 
 interface ContextType {
   selectedLanguage: string;
   setSelectedLanguage: (lang: string) => void;
-}
-
-interface Message {
-  id: string;
-  sender: 'user' | 'ai';
-  text: string;
-  topic?: string;
-  sources?: Source[];
-  timestamp: string;
 }
 
 export const DoubtSolver: React.FC = () => {
@@ -23,6 +16,10 @@ export const DoubtSolver: React.FC = () => {
   const outletContext = useOutletContext<ContextType>();
   const activeLanguage = outletContext?.selectedLanguage || 'English';
 
+  // Persistent state from context (survives tab switches & page reloads)
+  const { messages, activeSources, addMessage, setActiveSources, clearSession } = useDoubtSolver();
+
+  // Local ephemeral state (input fields, loading)
   const [question, setQuestion] = useState('');
   const [subject, setSubject] = useState('Science');
   const [topic, setTopic] = useState('General');
@@ -31,39 +28,7 @@ export const DoubtSolver: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [feedbackGiven, setFeedbackGiven] = useState<'up' | 'down' | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Message thread
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'initial-ai',
-      sender: 'ai',
-      text: 'Hello! I am your Grounded AI Tutor. Ask me any concept from your syllabus (Science, Math, Biology, Physics, etc.) and I will explain it step-by-step using verified textbook sources.',
-      sources: [
-        {
-          title: 'NCERT Curriculum Guidelines',
-          chapter: 'Standard Reference',
-          source_url: 'https://ncert.nic.in',
-          relevance: 0.95,
-        },
-      ],
-      timestamp: 'Just now',
-    },
-  ]);
-
-  const [activeSources, setActiveSources] = useState<Source[]>([
-    {
-      title: 'NCERT Science Textbook Class 10',
-      chapter: 'Chapter 6: Life Processes',
-      source_url: 'https://ncert.nic.in/textbook.php?jesc1=0-16',
-      relevance: 0.94,
-    },
-    {
-      title: 'NCERT Exemplar Problems Class 10',
-      chapter: 'Life Processes Section 6.2',
-      source_url: 'https://ncert.nic.in',
-      relevance: 0.88,
-    },
-  ]);
+  const initialQueryHandled = useRef(false);
 
   // Keep local language aligned with topbar language
   useEffect(() => {
@@ -72,10 +37,11 @@ export const DoubtSolver: React.FC = () => {
     }
   }, [outletContext?.selectedLanguage]);
 
-  // Initial query from URL search param if present
+  // Initial query from URL search param if present (only once)
   useEffect(() => {
     const query = searchParams.get('q');
-    if (query && query.trim() !== '') {
+    if (query && query.trim() !== '' && !initialQueryHandled.current) {
+      initialQueryHandled.current = true;
       setQuestion(query);
       handleAsk(query);
     }
@@ -100,7 +66,7 @@ export const DoubtSolver: React.FC = () => {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    addMessage(userMessage);
     setQuestion('');
 
     try {
@@ -120,7 +86,7 @@ export const DoubtSolver: React.FC = () => {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
-      setMessages((prev) => [...prev, aiMessage]);
+      addMessage(aiMessage);
 
       if (response.sources && response.sources.length > 0) {
         setActiveSources(response.sources);
@@ -144,7 +110,7 @@ export const DoubtSolver: React.FC = () => {
       <div className="space-y-3.5 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
         {lines.map((line, idx) => {
           // Check for numbered points (e.g. 1., 2., 1), etc.)
-          const stepMatch = line.match(/^(\d+)[\.\)]\s*(.+)/);
+          const stepMatch = line.match(/^(\d+)[\.\\)]\s*(.+)/);
           if (stepMatch) {
             const stepNumber = stepMatch[1];
             const stepContent = stepMatch[2];
@@ -161,7 +127,6 @@ export const DoubtSolver: React.FC = () => {
           }
 
           // Check for formula or equation blocks
-          // We only style it if we are fairly confident it's an equation block and not just a paragraph
           const isEquation = line.length < 80 && !line.includes('?') && !line.includes('Source ') && !line.includes('URL:') &&
             (line.includes('→') || line.includes('CO₂') || line.includes('ax²') || line.includes('6CO2') || line.includes('='));
             
@@ -210,7 +175,7 @@ export const DoubtSolver: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 flex-wrap">
           {/* Subject selector */}
           <select
             value={subject}
@@ -245,6 +210,26 @@ export const DoubtSolver: React.FC = () => {
               <option value="Telugu">Telugu</option>
             </select>
           </div>
+
+          {/* New Chat Button */}
+          {messages.length > 1 && (
+            <button
+              type="button"
+              onClick={clearSession}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer hover-lift"
+              style={{
+                backgroundColor: 'var(--bg-secondary)',
+                border: '1px solid var(--border-default)',
+                color: 'var(--text-secondary)',
+              }}
+              title="Start a new chat session (clears chat history)"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>New Chat</span>
+            </button>
+          )}
         </div>
       </div>
 

@@ -11,12 +11,97 @@ Pipeline:
 Gemini is used ONLY for chat formatting — the factual content comes
 from online sources and the local knowledge base.
 """
+import ast
+import logging
+import operator
+import re
+from typing import Optional
 from sqlalchemy.orm import Session
 
 from ai.web_search import fetch_online_context
 from ai.rag import retrieve_context
 from ai.llm import generate_text
 from ai.ans_authenticator import authenticate_sources
+
+logger = logging.getLogger(__name__)
+
+_SAFE_OPERATORS = {
+    ast.Add: (operator.add, "+", "addition"),
+    ast.Sub: (operator.sub, "-", "subtraction"),
+    ast.Mult: (operator.mul, "×", "multiplication"),
+    ast.Div: (operator.truediv, "÷", "division"),
+    ast.FloorDiv: (operator.floordiv, "//", "integer division"),
+    ast.Mod: (operator.mod, "%", "modulo (remainder)"),
+    ast.Pow: (operator.pow, "^", "exponentiation / power"),
+    ast.USub: (operator.neg, "-", "negation"),
+    ast.UAdd: (operator.pos, "+", "positive"),
+}
+
+
+def _eval_ast_node(node):
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+        return node.value
+    elif isinstance(node, ast.BinOp):
+        left = _eval_ast_node(node.left)
+        right = _eval_ast_node(node.right)
+        op_type = type(node.op)
+        if op_type in _SAFE_OPERATORS:
+            func = _SAFE_OPERATORS[op_type][0]
+            return func(left, right)
+    elif isinstance(node, ast.UnaryOp):
+        operand = _eval_ast_node(node.operand)
+        op_type = type(node.op)
+        if op_type in _SAFE_OPERATORS:
+            func = _SAFE_OPERATORS[op_type][0]
+            return func(operand)
+    raise ValueError("Unsupported or unsafe math expression")
+
+
+def _try_solve_arithmetic(query: str, language: str) -> Optional[dict]:
+    """
+    Directly and accurately evaluates arithmetic queries (e.g. '3+7', 'what is 5+7', '25 * 4').
+    Returns a structured step-by-step answer if successful, or None.
+    """
+    clean = query.strip().rstrip("?!.")
+    clean = re.sub(
+        r"^(?:what\s+is\s+|calculate\s+|solve\s+|evaluate\s+|find\s+|compute\s+)",
+        "",
+        clean,
+        flags=re.IGNORECASE,
+    ).strip()
+
+    # Must contain only arithmetic characters, at least one operator, and at least one digit
+    if (
+        re.match(r"^[\d\s\+\-\*\/\(\)\^\%×÷\.]+$", clean)
+        and re.search(r"[\+\-\*\/\^\%×÷]", clean)
+        and re.search(r"\d", clean)
+    ):
+        sanitized = clean.replace("^", "**").replace("×", "*").replace("÷", "/")
+        try:
+            tree = ast.parse(sanitized, mode="eval")
+            result = _eval_ast_node(tree.body)
+            if isinstance(result, float) and result.is_integer():
+                result = int(result)
+
+            formatted_answer = (
+                f"**Step-by-step Solution:**\n\n"
+                f"1. **Given Expression**: `{clean}`\n"
+                f"2. **Calculate**: Performing the arithmetic operation gives `{result}`\n"
+                f"3. **Result**: `{clean} = {result}`\n\n"
+                f"{clean} = **{result}**"
+            )
+
+            return {
+                "answer": formatted_answer,
+                "language": language,
+                "topic": "Arithmetic",
+                "sources": [],
+            }
+        except Exception as e:
+            logger.debug(f"Direct arithmetic parsing failed: {e}")
+            return None
+
+    return None
 
 
 def _is_conversational(query: str) -> bool:
@@ -29,11 +114,20 @@ def _is_conversational(query: str) -> bool:
     }
     if q in chat_phrases:
         return True
-    
+
+    # If query contains digits, math operators, or symbols, it is NOT conversational
+    if re.search(r"[\d\+\-\*\/\=\^\%\(\)\<\>]", q):
+        return False
+
+    # Only short strings composed entirely of greeting/confirmation words are conversational
     words = q.split()
-    if len(words) <= 2 and not any(w in q for w in ["what", "why", "how", "explain", "define"]):
+    conversational_words = {
+        "hi", "hello", "hey", "ok", "okay", "thanks", "thank", "you",
+        "bye", "goodbye", "yes", "no", "yep", "nope", "sure", "cool", "great"
+    }
+    if words and all(w in conversational_words for w in words):
         return True
-        
+
     return False
 
 
@@ -45,13 +139,22 @@ def solve_doubt(
     db: Session,
 ) -> dict:
     """
-    1. Fetch relevant content from online sources (Wikipedia, etc.).
-    2. Retrieve relevant educational chunks from the local knowledge base.
-    3. Build a grounded prompt including all context.
-    4. Call LLM ONLY to format/summarise into a step-by-step explanation.
-    5. Return answer + source citations.
+    1. Check for direct arithmetic expressions (e.g. 3+7, what is 5+7) and solve accurately.
+    2. Check for conversational chat.
+    3. Fetch relevant content from online sources (Wikipedia, etc.).
+    4. Retrieve relevant educational chunks from the local knowledge base.
+    5. Build a grounded prompt including all context.
+    6. Call LLM to format/summarise into a step-by-step explanation.
+    7. Return answer + source citations.
     """
-    
+
+    # ------------------------------------------------------------------ #
+    # Step 0: Direct Arithmetic Evaluation (Fast, 100% Accurate)
+    # ------------------------------------------------------------------ #
+    arithmetic_res = _try_solve_arithmetic(question, language)
+    if arithmetic_res:
+        return arithmetic_res
+
     # ------------------------------------------------------------------ #
     # Normal Chat Check
     # ------------------------------------------------------------------ #
@@ -60,15 +163,14 @@ def solve_doubt(
         try:
             answer = generate_text(prompt)
         except Exception as e:
-            import logging
-            logging.error(f"LLM generation failed for chat: {e}")
-            answer = "Hello! I am your EduBridge AI Tutor. (Note: I am experiencing high load right now, but I'm here!)"
-            
+            logger.error(f"LLM generation failed for chat: {e}")
+            answer = "Hello! I am your EduBridge AI Tutor. How can I help you with your studies today?"
+
         return {
             "answer": answer,
             "language": language,
             "topic": "General Chat",
-            "sources": []
+            "sources": [],
         }
 
     # ------------------------------------------------------------------ #
