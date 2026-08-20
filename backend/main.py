@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from core.config import settings
-from routes import auth, doubts, practice, teacher, scholarships
+from routes import auth, doubts, practice, teacher, scholarships, contests
 
 app = FastAPI(
     title="EduBridge AI Backend",
@@ -31,6 +31,7 @@ app.include_router(doubts.router)
 app.include_router(practice.router)
 app.include_router(teacher.router)
 app.include_router(scholarships.router)
+app.include_router(contests.router)
 
 
 # ------------------------------------------------------------------ #

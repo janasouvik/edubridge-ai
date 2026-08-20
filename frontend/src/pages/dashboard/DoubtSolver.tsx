@@ -161,7 +161,11 @@ export const DoubtSolver: React.FC = () => {
           }
 
           // Check for formula or equation blocks
-          if (line.includes('→') || line.includes('=') || line.includes('CO₂') || line.includes('ax²') || line.includes('6CO2')) {
+          // We only style it if we are fairly confident it's an equation block and not just a paragraph
+          const isEquation = line.length < 80 && !line.includes('?') && !line.includes('Source ') && !line.includes('URL:') &&
+            (line.includes('→') || line.includes('CO₂') || line.includes('ax²') || line.includes('6CO2') || line.includes('='));
+            
+          if (isEquation) {
             return (
               <div key={idx} className="p-3.5 rounded-xl font-mono text-xs sm:text-sm text-center flex items-center justify-center gap-2 my-2" style={{ backgroundColor: 'var(--success-bg)', border: '1px solid var(--success-border)', color: 'var(--success-text)' }}>
                 <span>🌿</span>
@@ -280,12 +284,23 @@ export const DoubtSolver: React.FC = () => {
                         </div>
                       </div>
 
-                      {msg.topic && (
+                    {msg.topic && (
                         <span className="px-2.5 py-1 text-xs font-semibold rounded-md" style={{ backgroundColor: 'var(--brand-bg)', color: 'var(--brand-text)' }}>
                           {msg.topic}
                         </span>
                       )}
                     </div>
+
+                    {msg.sources?.find(s => s.image_url) && (
+                      <div className="py-2">
+                        <img 
+                          src={msg.sources.find(s => s.image_url)?.image_url!} 
+                          alt="Educational illustration" 
+                          className="rounded-xl w-full max-w-md object-contain max-h-64 mx-auto" 
+                          style={{ border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-secondary)' }}
+                        />
+                      </div>
+                    )}
 
                     {renderStructuredAnswer(msg.text)}
 
@@ -307,7 +322,7 @@ export const DoubtSolver: React.FC = () => {
               <div className="p-6 rounded-2xl flex items-center gap-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-sm)' }}>
                 <LoadingSpinner size="sm" />
                 <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                  Retrieving textbook context and formulating step-by-step explanation in {language}...
+                  Thinking...
                 </span>
               </div>
             )}
@@ -406,6 +421,16 @@ export const DoubtSolver: React.FC = () => {
                     className="p-3.5 rounded-xl transition-colors space-y-1.5"
                     style={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}
                   >
+                    {source.image_url && (
+                      <div className="mb-2">
+                        <img 
+                          src={source.image_url} 
+                          alt={source.title} 
+                          className="w-full h-24 object-cover rounded-lg" 
+                          style={{ border: '1px solid var(--border-default)' }} 
+                        />
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <span
                         className="text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"

@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 1440
-    LLM_API_KEY: str
+    LLM_API_KEYS: str
     LLM_MODEL: str = "gemini-1.5-flash"
     FRONTEND_URL: str = "http://localhost:5173"
 

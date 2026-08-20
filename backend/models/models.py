@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from sqlalchemy import (
     Column, Integer, String, Text, Float, Boolean,
-    DateTime, ForeignKey, Enum as SAEnum, Date
+    DateTime, ForeignKey, Enum as SAEnum, Date, JSON
 )
 from sqlalchemy.orm import relationship
 from db.db import Base
@@ -28,6 +28,12 @@ class SeverityEnum(str, enum.Enum):
     low = "low"
     medium = "medium"
     high = "high"
+
+
+class ContestStatusEnum(str, enum.Enum):
+    upcoming = "upcoming"
+    live = "live"
+    completed = "completed"
 
 
 # --------------------------------------------------------------------------- #
@@ -191,3 +197,86 @@ class Scholarship(Base):
     deadline = Column(Date, nullable=True)
     application_url = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+# --------------------------------------------------------------------------- #
+# Contest
+# --------------------------------------------------------------------------- #
+
+class Contest(Base):
+    __tablename__ = "contests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(500), nullable=False)
+    domain = Column(String(255), nullable=False)
+    target_grade = Column(String(50), nullable=False, default="10")
+    target_stream = Column(String(255), nullable=True)
+    scheduled_at = Column(DateTime, nullable=False)
+    duration_minutes = Column(Integer, nullable=False, default=30)
+    status = Column(
+        SAEnum(ContestStatusEnum),
+        nullable=False,
+        default=ContestStatusEnum.upcoming,
+    )
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    questions = relationship("ContestQuestion", back_populates="contest", order_by="ContestQuestion.position")
+    participations = relationship("ContestParticipation", back_populates="contest")
+
+
+# --------------------------------------------------------------------------- #
+# ContestQuestion
+# --------------------------------------------------------------------------- #
+
+class ContestQuestion(Base):
+    __tablename__ = "contest_questions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    contest_id = Column(Integer, ForeignKey("contests.id", ondelete="CASCADE"), nullable=False)
+    position = Column(Integer, nullable=False, default=0)
+    question_text = Column(Text, nullable=False)
+    option_a = Column(Text, nullable=False)
+    option_b = Column(Text, nullable=False)
+    option_c = Column(Text, nullable=False)
+    option_d = Column(Text, nullable=False)
+    correct_option = Column(String(1), nullable=False)  # 'A', 'B', 'C', or 'D'
+    explanation = Column(Text, nullable=True)
+
+    contest = relationship("Contest", back_populates="questions")
+
+
+# --------------------------------------------------------------------------- #
+# ContestParticipation
+# --------------------------------------------------------------------------- #
+
+class ContestParticipation(Base):
+    __tablename__ = "contest_participations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    contest_id = Column(Integer, ForeignKey("contests.id", ondelete="CASCADE"), nullable=False)
+    student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    answers = Column(JSON, nullable=True)         # {question_id: "A"|"B"|"C"|"D"}
+    score = Column(Integer, nullable=False, default=0)
+    total_questions = Column(Integer, nullable=False, default=0)
+    rating_change = Column(Integer, nullable=False, default=0)
+    submitted_at = Column(DateTime, default=datetime.utcnow)
+
+    contest = relationship("Contest", back_populates="participations")
+    student = relationship("Student")
+
+
+# --------------------------------------------------------------------------- #
+# StudentRating
+# --------------------------------------------------------------------------- #
+
+class StudentRating(Base):
+    __tablename__ = "student_ratings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"), unique=True, nullable=False)
+    current_rating = Column(Integer, nullable=False, default=1200)
+    highest_rating = Column(Integer, nullable=False, default=1200)
+    contests_played = Column(Integer, nullable=False, default=0)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    student = relationship("Student")

@@ -2,26 +2,31 @@
 Embedding generation using Google Gemini embedding model.
 Returns a list of floats representing the semantic embedding of the given text.
 """
-import google.generativeai as genai
+from google import genai
+# pyrefly: ignore [missing-import]
+from google.genai import types as genai_types
 from core.config import settings
+from ai.client_manager import execute_with_fallback
 
-genai.configure(api_key=settings.LLM_API_KEY)
-
-EMBEDDING_MODEL = "models/embedding-001"
+EMBEDDING_MODEL = "models/gemini-embedding-001"
 
 
 def generate_embedding(text: str) -> list[float]:
     """
     Generate a semantic embedding vector for the given text.
-    Returns a list of floats (768 dimensions for text-embedding-004).
+    Returns a list of floats.
+    Automatically rotates API keys on failure.
     """
-    try:
-        result = genai.embed_content(
+    def _do_embed(client):
+        result = client.models.embed_content(
             model=EMBEDDING_MODEL,
-            content=text,
-            task_type="retrieval_document",
+            contents=text,
+            config=genai_types.EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT"),
         )
-        return result["embedding"]
+        return result.embeddings[0].values
+        
+    try:
+        return execute_with_fallback(_do_embed)
     except Exception as e:
         raise RuntimeError(f"Embedding generation failed: {e}") from e
 
@@ -29,13 +34,17 @@ def generate_embedding(text: str) -> list[float]:
 def generate_query_embedding(text: str) -> list[float]:
     """
     Generate a query embedding (optimised for retrieval queries).
+    Automatically rotates API keys on failure.
     """
-    try:
-        result = genai.embed_content(
+    def _do_embed(client):
+        result = client.models.embed_content(
             model=EMBEDDING_MODEL,
-            content=text,
-            task_type="retrieval_query",
+            contents=text,
+            config=genai_types.EmbedContentConfig(task_type="RETRIEVAL_QUERY"),
         )
-        return result["embedding"]
+        return result.embeddings[0].values
+        
+    try:
+        return execute_with_fallback(_do_embed)
     except Exception as e:
         raise RuntimeError(f"Query embedding failed: {e}") from e

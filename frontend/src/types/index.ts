@@ -39,6 +39,7 @@ export interface Source {
   title: string;
   chapter: string | null;
   source_url: string | null;
+  image_url?: string | null;
   relevance: number;
 }
 
